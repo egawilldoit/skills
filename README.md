@@ -13,30 +13,46 @@ designing a change, implementing it, reviewing it, verifying it, landing it,
 certifying a release, and reconciling what is actually deployed. It favors
 verification over assertion and explicit authority over improvisation.
 
-## OpenAI-compatible structure
+## Agent Plugins structure
 
-The repository is a portable Agent Skills plugin.
+This repository is a portable [Agent Plugins](https://agent-plugins.org/)
+package. `plugin.json` is the portable manifest, conforming to the Agent
+Plugins 1.0.0 schema.
 
 ```text
 skills/
 ├── README.md
-├── plugin.json                 portable plugin manifest
-├── LICENSE                     this repository's MIT license
-├── THIRD_PARTY_NOTICES.md      upstream attribution
-├── upstream-sources.json       machine-readable provenance registry
+├── plugin.json                        portable Agent Plugins manifest (1.0.0)
+├── LICENSE                            this repository's MIT license
+├── THIRD_PARTY_NOTICES.md             upstream attribution
+├── upstream-sources.json              machine-readable provenance registry
 ├── references/
-│   └── operating-contract.md   shared vocabulary for owned skills
-├── scripts/                    catalog tooling (see below)
+│   ├── operating-contract.md          shared vocabulary for owned skills
+│   └── agent-plugin-schema-1.0.0.json vendored canonical schema (offline validation)
+├── scripts/                           catalog tooling (see below)
 ├── tests/
-│   └── trigger-cases.json      routing test cases for owned skills
+│   └── trigger-cases.json             routing test cases for owned skills
+├── .github/
+│   └── workflows/
+│       └── catalog-validation.yml     first-party CI
 └── skills/
     └── <skill-name>/
-        ├── SKILL.md            name + description frontmatter, then the workflow
-        ├── agents/openai.yaml  UI metadata: display_name, short_description, default_prompt
-        ├── references/         optional long-form material
-        ├── scripts/            optional deterministic automation
-        └── assets/             optional files copied into outputs
+        ├── SKILL.md                   name + description frontmatter, then the workflow
+        ├── agents/openai.yaml         OpenAI UI metadata for the skill
+        ├── references/                optional long-form material
+        ├── scripts/                   optional deterministic automation
+        └── assets/                    optional files copied into outputs
 ```
+
+Key packaging facts:
+
+- `plugin.json` is the portable Agent Plugins manifest. It declares `$schema`,
+  identity, and publisher metadata, and nothing else at the root.
+- Portable packages auto-discover skills from the root `skills/` directory, so
+  the manifest does **not** declare a `skills` field.
+- OpenAI-specific install-surface metadata (presentation) lives under
+  `extensions.com.openai.interface`, not at the manifest root.
+- There is no MCP server, so there is no `mcp.json`.
 
 Every `SKILL.md` uses only `name` and `description` frontmatter. Every skill
 ships `agents/openai.yaml` with a human-facing title, a short blurb, and an
@@ -73,9 +89,14 @@ are remapped to the names used here so no link goes dead. Descriptions and
 
 A copied skill is the upstream skill, repackaged. An adapted skill keeps the
 problem definition, workflow shape, and decision rules, but is rewritten so it
-does not depend on a specific runtime. Adapted skills remove Cursor-only
-primitives such as proprietary task APIs, transcript paths, and fixed model
-slugs, and describe parallel work in runtime-neutral terms.
+does not depend on a specific runtime.
+
+Adapted skills remove Cursor-only primitives such as proprietary task APIs,
+transcript paths, and fixed model slugs. The GitHub workflows are also
+capability-neutral: they prefer a native or connected GitHub capability, fall
+back to the authenticated GitHub CLI when it is available, and report the
+capability as unavailable rather than claiming an operation that did not
+happen. They resolve the actual base branch instead of assuming `main`.
 
 ## How original skills are added
 
@@ -94,14 +115,14 @@ carries the upstream MIT notices.
 ## How to validate and update the catalog
 
 ```bash
-# regenerate agents/openai.yaml from the curated metadata table
-python3 scripts/sync_openai_yaml.py
+# validate the portable manifest against the Agent Plugins 1.0.0 schema
+python3 scripts/validate_plugin_manifest.py
 
-# rebuild upstream-sources.json from the pinned source
-python3 scripts/build_upstream_sources.py
-
-# validate structure, metadata, references, leaks, and provenance
+# validate catalog structure, metadata, references, leaks, and provenance
 python3 scripts/validate_catalog.py
+
+# check agents/openai.yaml is current
+python3 scripts/sync_openai_yaml.py --check
 
 # review description overlap across at-risk clusters
 python3 scripts/routing_audit.py
@@ -109,14 +130,30 @@ python3 scripts/routing_audit.py
 # check owned skills route their trigger cases to the intended skill
 python3 scripts/trigger_audit.py
 
+# regenerate agents/openai.yaml from the curated metadata table
+python3 scripts/sync_openai_yaml.py
+
+# rebuild upstream-sources.json from the pinned source
+python3 scripts/build_upstream_sources.py
+
 # re-import copied skills from a cursor/plugins checkout
 python3 scripts/import_cursor_skills.py --source /path/to/cursor-plugins
 ```
 
-`validate_catalog.py` is the gate. It fails on invalid frontmatter, name and
-directory mismatch, missing or stale `agents/openai.yaml`, broken references,
-empty resource folders, placeholders, Cursor-specific coupling, and provenance
-gaps.
+Validation has three distinct layers:
+
+- `validate_plugin_manifest.py` validates `plugin.json` against the official
+  Agent Plugins 1.0.0 JSON Schema. The exact 1.0.0 schema is vendored at
+  `references/agent-plugin-schema-1.0.0.json` so validation is deterministic and
+  offline; the script refuses to run if the local copy diverges from the
+  canonical `https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`.
+- `validate_catalog.py` is the repository catalog gate. It calls the manifest
+  validator, then checks skill structure, frontmatter, `agents/openai.yaml`,
+  reference integrity, empty resource folders, placeholders, Cursor-specific
+  coupling, and provenance coverage.
+- The legacy OpenAI `openai/skills` `skill-creator` `quick_validate.py` is an
+  optional historical cross-check of skill anatomy. It is not the current
+  plugin-packaging validator and is not part of CI.
 
 `tests/trigger-cases.json` holds six representative requests per owned skill:
 direct, indirect, incomplete, a nearby request that must not fire, a boundary
@@ -124,19 +161,28 @@ case against the closest sibling, and a hard edge case. `trigger_audit.py`
 checks the suite structurally and reports where wording drifts toward a
 sibling. Real routing is semantic, so the lexical layer is a signal, not a gate.
 
+## CI
+
+`.github/workflows/catalog-validation.yml` runs the full validation suite on
+every pull request and on pushes to `main`:
+
+```text
+scripts/validate_plugin_manifest.py
+scripts/validate_catalog.py
+scripts/sync_openai_yaml.py --check
+scripts/routing_audit.py
+scripts/trigger_audit.py
+python3 -m compileall -q scripts skills
+```
+
 ## Catalog
 
 | Skill | Purpose | Origin | Ownership |
 | --- | --- | --- | --- |
 | [`blast-radius`](skills/blast-radius/) | Find what a change breaks elsewhere before it ships | `pstack/skills/blast-radius` | UPSTREAM |
 | [`check-compiler-errors`](skills/check-compiler-errors/) | Surface and clear compiler and type errors | `cursor-team-kit/skills/check-compiler-errors` | UPSTREAM |
-| [`deslop`](skills/deslop/) | Remove dead code and leftover scaffolding | `cursor-team-kit/skills/deslop` | UPSTREAM |
-| [`fix-ci`](skills/fix-ci/) | Diagnose and repair a failing CI check | `cursor-team-kit/skills/fix-ci` | UPSTREAM |
 | [`fix-merge-conflicts`](skills/fix-merge-conflicts/) | Resolve conflicts while preserving intent | `cursor-team-kit/skills/fix-merge-conflicts` | UPSTREAM |
 | [`get-pr-comments`](skills/get-pr-comments/) | Collect and triage review comments on a PR | `cursor-team-kit/skills/get-pr-comments` | UPSTREAM |
-| [`loop-on-ci`](skills/loop-on-ci/) | Drive CI to green on the current head | `cursor-team-kit/skills/loop-on-ci` | UPSTREAM |
-| [`make-pr-easy-to-review`](skills/make-pr-easy-to-review/) | Improve reviewer ergonomics without behavior change | `cursor-team-kit/skills/make-pr-easy-to-review` | UPSTREAM |
-| [`new-branch-and-pr`](skills/new-branch-and-pr/) | Branch, commit, push, and open a clean PR | `cursor-team-kit/skills/new-branch-and-pr` | UPSTREAM |
 | [`principle-attack-the-premise`](skills/principle-attack-the-premise/) | Challenge the assumption the task is built on | `pstack/skills/principle-attack-the-premise` | UPSTREAM |
 | [`principle-boundary-discipline`](skills/principle-boundary-discipline/) | Validate at system boundaries, trust internal types | `pstack/skills/principle-boundary-discipline` | UPSTREAM |
 | [`principle-build-the-lever`](skills/principle-build-the-lever/) | Build the tool that does or proves the work | `pstack/skills/principle-build-the-lever` | UPSTREAM |
@@ -159,7 +205,6 @@ sibling. Real routing is semantic, so the lexical layer is a signal, not a gate.
 | [`principle-subtract-before-you-add`](skills/principle-subtract-before-you-add/) | Remove dead weight before building on the base | `pstack/skills/principle-subtract-before-you-add` | UPSTREAM |
 | [`principle-test-behavior-not-implementation`](skills/principle-test-behavior-not-implementation/) | Assert observable behavior, not internal structure | `pstack/skills/principle-test-behavior-not-implementation` | UPSTREAM |
 | [`principle-type-system-discipline`](skills/principle-type-system-discipline/) | Make illegal states unrepresentable in the types | `pstack/skills/principle-type-system-discipline` | UPSTREAM |
-| [`review-and-ship`](skills/review-and-ship/) | Finish one ordinary branch or PR cleanly | `cursor-team-kit/skills/review-and-ship` | UPSTREAM |
 | [`run-smoke-tests`](skills/run-smoke-tests/) | Run the project's existing smoke suite | `cursor-team-kit/skills/run-smoke-tests` | UPSTREAM |
 | [`tdd`](skills/tdd/) | Drive changes from a failing test to a proven fix | `pstack/skills/tdd` | UPSTREAM |
 | [`technical-writing`](skills/technical-writing/) | Write and review docs, RFCs, and PR descriptions | `pstack/skills/technical-writing` | UPSTREAM |
@@ -174,12 +219,18 @@ sibling. Real routing is semantic, so the lexical layer is a signal, not a gate.
 | [`deliver-software`](skills/deliver-software/) | Route non-trivial engineering work to the right skill | `poteto-mode` | ADAPTED |
 | [`design-architecture`](skills/design-architecture/) | Produce an implementable architecture contract | `architect` | ADAPTED |
 | [`design-investigation`](skills/design-investigation/) | Plan an investigation when no narrower workflow fits | `figure-it-out` | ADAPTED |
+| [`deslop`](skills/deslop/) | Remove dead code and leftover scaffolding | `deslop` | ADAPTED |
+| [`fix-ci`](skills/fix-ci/) | Diagnose and repair a failing CI check | `fix-ci` | ADAPTED |
+| [`loop-on-ci`](skills/loop-on-ci/) | Drive CI to green on the current head | `loop-on-ci` | ADAPTED |
 | [`maintain-verification-workflow`](skills/maintain-verification-workflow/) | Audit a verification workflow against the current app | `maintain-verification-skill` | ADAPTED |
+| [`make-pr-easy-to-review`](skills/make-pr-easy-to-review/) | Improve reviewer ergonomics without behavior change | `make-pr-easy-to-review` | ADAPTED |
 | [`mine-work-patterns`](skills/mine-work-patterns/) | Find recurring work worth encoding as a skill | `automate-me + workflow-from-chats` | ADAPTED |
+| [`new-branch-and-pr`](skills/new-branch-and-pr/) | Branch, commit, push, and open a clean PR | `new-branch-and-pr` | ADAPTED |
 | [`parallelize-work`](skills/parallelize-work/) | Fan out work that can be split without conflict | `swarm` | ADAPTED |
 | [`record-evidence`](skills/record-evidence/) | Keep an auditable decision and evidence ledger | `show-me-your-work` | ADAPTED |
 | [`recover-design-rationale`](skills/recover-design-rationale/) | Recover why code is shaped this way, with sources | `why` | ADAPTED |
 | [`recover-work-context`](skills/recover-work-context/) | Reconstruct the current state of ongoing work | `recall` | ADAPTED |
+| [`review-and-ship`](skills/review-and-ship/) | Finish one ordinary branch or PR cleanly | `review-and-ship` | ADAPTED |
 | [`understand-codebase`](skills/understand-codebase/) | Build a mental model of how a subsystem works | `how` | ADAPTED |
 | [`verify-cli`](skills/verify-cli/) | Verify CLI or TUI behavior with real execution | `control-cli` | ADAPTED |
 | [`verify-ui`](skills/verify-ui/) | Verify real browser or UI behavior with evidence | `control-ui` | ADAPTED |
@@ -195,4 +246,4 @@ sibling. Real routing is semantic, so the lexical layer is a signal, not a gate.
 | [`reconcile-project-truth`](skills/reconcile-project-truth/) | Resolve contradictions across project sources | `-` | ORIGINAL |
 | [`trace-artifact-provenance`](skills/trace-artifact-provenance/) | Trace source to artifact to release lineage | `-` | ORIGINAL |
 
-Catalog counts: 40 copied, 16 adapted, 10 original, 66 total.
+Catalog counts: 34 copied, 22 adapted, 10 original, 66 total.

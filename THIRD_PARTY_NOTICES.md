@@ -63,18 +63,12 @@ From `cursor-team-kit/skills/` (author: Eric Zakariasson):
 
 ```text
 verify-this
-review-and-ship
-make-pr-easy-to-review
-loop-on-ci
-fix-ci
 run-smoke-tests
 check-compiler-errors
 get-pr-comments
 fix-merge-conflicts
-new-branch-and-pr
 what-did-i-get-done
 weekly-review
-deslop
 ```
 
 ## Adapted skills
@@ -101,7 +95,20 @@ design-investigation               <- pstack/skills/figure-it-out
 deliver-software                   <- pstack/skills/poteto-mode
 verify-ui                          <- cursor-team-kit/skills/control-ui
 verify-cli                         <- cursor-team-kit/skills/control-cli
+review-and-ship                    <- cursor-team-kit/skills/review-and-ship
+make-pr-easy-to-review             <- cursor-team-kit/skills/make-pr-easy-to-review
+loop-on-ci                         <- cursor-team-kit/skills/loop-on-ci
+fix-ci                             <- cursor-team-kit/skills/fix-ci
+new-branch-and-pr                  <- cursor-team-kit/skills/new-branch-and-pr
+deslop                             <- cursor-team-kit/skills/deslop
 ```
+
+The six `cursor-team-kit` skills above were reclassified from copied to
+adapted. Their upstream logic is preserved, but their GitHub access and base
+branch handling were rewritten to be runtime-neutral: a native or connected
+GitHub capability is preferred, the authenticated GitHub CLI is a fallback, and
+the actual base branch is resolved instead of assuming `main`. Attribution to
+the upstream authors is unchanged.
 
 ## Upstream license notices
 
