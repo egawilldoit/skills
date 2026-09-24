@@ -24,6 +24,9 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import validate_plugin_manifest  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = REPO_ROOT / "skills"
 
@@ -70,22 +73,9 @@ def warn(message: str) -> None:
 
 
 def check_plugin() -> None:
-    path = REPO_ROOT / "plugin.json"
-    if not path.is_file():
-        fail("plugin.json: missing")
-        return
-    try:
-        data = json.loads(path.read_text())
-    except json.JSONDecodeError as exc:
-        fail(f"plugin.json: invalid JSON: {exc}")
-        return
-    for key in ("name", "version", "description", "license", "skills"):
-        if key not in data:
-            fail(f"plugin.json: missing required field '{key}'")
-    if data.get("skills") != "./skills/":
-        fail("plugin.json: 'skills' must be './skills/'")
-    if not isinstance(data.get("interface"), dict):
-        fail("plugin.json: missing 'interface' object")
+    """Validate plugin.json against the Agent Plugins 1.0.0 contract."""
+    for message in validate_plugin_manifest.validate(REPO_ROOT / "plugin.json"):
+        fail(message)
 
 
 def parse_skill_md(path: Path) -> tuple[dict, str]:
