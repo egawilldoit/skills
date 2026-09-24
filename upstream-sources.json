@@ -1,0 +1,517 @@
+{
+  "source_repository": "https://github.com/cursor/plugins",
+  "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+  "generated_by": "scripts/build_upstream_sources.py",
+  "sources": [
+    {
+      "skill": "adversarial-review",
+      "origin": "cursor/plugins",
+      "source_skill": "interrogate",
+      "source_path": "pstack/skills/interrogate",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "blast-radius",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/blast-radius",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "build-execution-contract",
+      "mode": "original"
+    },
+    {
+      "skill": "certify-database-rollout",
+      "mode": "original"
+    },
+    {
+      "skill": "certify-mcp-production",
+      "mode": "original"
+    },
+    {
+      "skill": "certify-pr-head",
+      "mode": "original"
+    },
+    {
+      "skill": "certify-production-target",
+      "mode": "original"
+    },
+    {
+      "skill": "certify-release",
+      "mode": "original"
+    },
+    {
+      "skill": "check-compiler-errors",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/check-compiler-errors",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "compare-designs",
+      "origin": "cursor/plugins",
+      "source_skill": "arena",
+      "source_path": "pstack/skills/arena",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "create-verification-workflow",
+      "origin": "cursor/plugins",
+      "source_skill": "create-verification-skill",
+      "source_path": "pstack/skills/create-verification-skill",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "deliver-software",
+      "origin": "cursor/plugins",
+      "source_skill": "poteto-mode",
+      "source_path": "pstack/skills/poteto-mode",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "design-architecture",
+      "origin": "cursor/plugins",
+      "source_skill": "architect",
+      "source_path": "pstack/skills/architect",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "design-investigation",
+      "origin": "cursor/plugins",
+      "source_skill": "figure-it-out",
+      "source_path": "pstack/skills/figure-it-out",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "deslop",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/deslop",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "fix-ci",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/fix-ci",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "fix-merge-conflicts",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/fix-merge-conflicts",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "get-pr-comments",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/get-pr-comments",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "integrate-pr-stack",
+      "mode": "original"
+    },
+    {
+      "skill": "loop-on-ci",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/loop-on-ci",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "maintain-verification-workflow",
+      "origin": "cursor/plugins",
+      "source_skill": "maintain-verification-skill",
+      "source_path": "pstack/skills/maintain-verification-skill",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "make-pr-easy-to-review",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/make-pr-easy-to-review",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "mine-work-patterns",
+      "origin": "cursor/plugins",
+      "source_skills": [
+        "automate-me",
+        "workflow-from-chats"
+      ],
+      "source_paths": [
+        "pstack/skills/automate-me",
+        "cursor-team-kit/skills/workflow-from-chats"
+      ],
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "new-branch-and-pr",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/new-branch-and-pr",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "parallelize-work",
+      "origin": "cursor/plugins",
+      "source_skill": "swarm",
+      "source_path": "pstack/skills/swarm",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "preflight-repository",
+      "mode": "original"
+    },
+    {
+      "skill": "principle-attack-the-premise",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-attack-the-premise",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-boundary-discipline",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-boundary-discipline",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-build-the-lever",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-build-the-lever",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-encode-lessons-in-structure",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-encode-lessons-in-structure",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-exhaust-the-design-space",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-exhaust-the-design-space",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-experience-first",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-experience-first",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-fix-root-causes",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-fix-root-causes",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-foundational-thinking",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-foundational-thinking",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-guard-the-context-window",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-guard-the-context-window",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-laziness-protocol",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-laziness-protocol",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-make-operations-idempotent",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-make-operations-idempotent",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-migrate-callers-then-delete-legacy-apis",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-migrate-callers-then-delete-legacy-apis",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-minimize-reader-load",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-minimize-reader-load",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-model-the-domain",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-model-the-domain",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-outcome-oriented-execution",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-outcome-oriented-execution",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-prove-it-works",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-prove-it-works",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-redesign-from-first-principles",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-redesign-from-first-principles",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-separate-before-serializing-shared-state",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-separate-before-serializing-shared-state",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-sequence-verifiable-units",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-sequence-verifiable-units",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-subtract-before-you-add",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-subtract-before-you-add",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-test-behavior-not-implementation",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-test-behavior-not-implementation",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "principle-type-system-discipline",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/principle-type-system-discipline",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "reconcile-project-truth",
+      "mode": "original"
+    },
+    {
+      "skill": "record-evidence",
+      "origin": "cursor/plugins",
+      "source_skill": "show-me-your-work",
+      "source_path": "pstack/skills/show-me-your-work",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "recover-design-rationale",
+      "origin": "cursor/plugins",
+      "source_skill": "why",
+      "source_path": "pstack/skills/why",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "recover-work-context",
+      "origin": "cursor/plugins",
+      "source_skill": "recall",
+      "source_path": "pstack/skills/recall",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "review-and-ship",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/review-and-ship",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "run-smoke-tests",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/run-smoke-tests",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "tdd",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/tdd",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "technical-writing",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/technical-writing",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "trace-artifact-provenance",
+      "mode": "original"
+    },
+    {
+      "skill": "typescript-best-practices",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/typescript-best-practices",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "understand-codebase",
+      "origin": "cursor/plugins",
+      "source_skill": "how",
+      "source_path": "pstack/skills/how",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "unslop",
+      "origin": "cursor/plugins",
+      "source_path": "pstack/skills/unslop",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "verify-cli",
+      "origin": "cursor/plugins",
+      "source_skill": "control-cli",
+      "source_path": "cursor-team-kit/skills/control-cli",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "verify-this",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/verify-this",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "verify-ui",
+      "origin": "cursor/plugins",
+      "source_skill": "control-ui",
+      "source_path": "cursor-team-kit/skills/control-ui",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    },
+    {
+      "skill": "weekly-review",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/weekly-review",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "what-did-i-get-done",
+      "origin": "cursor/plugins",
+      "source_path": "cursor-team-kit/skills/what-did-i-get-done",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "copied"
+    },
+    {
+      "skill": "work-retrospective",
+      "origin": "cursor/plugins",
+      "source_skill": "reflect",
+      "source_path": "pstack/skills/reflect",
+      "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
+      "license": "MIT",
+      "mode": "adapted"
+    }
+  ]
+}
