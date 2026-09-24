@@ -53,18 +53,12 @@ COPIED: dict[str, str] = {
     "principle-test-behavior-not-implementation": f"{PSTACK}/principle-test-behavior-not-implementation",
     "principle-type-system-discipline": f"{PSTACK}/principle-type-system-discipline",
     "verify-this": f"{TEAM_KIT}/verify-this",
-    "review-and-ship": f"{TEAM_KIT}/review-and-ship",
-    "make-pr-easy-to-review": f"{TEAM_KIT}/make-pr-easy-to-review",
-    "loop-on-ci": f"{TEAM_KIT}/loop-on-ci",
-    "fix-ci": f"{TEAM_KIT}/fix-ci",
+    "what-did-i-get-done": f"{TEAM_KIT}/what-did-i-get-done",
+    "weekly-review": f"{TEAM_KIT}/weekly-review",
     "run-smoke-tests": f"{TEAM_KIT}/run-smoke-tests",
     "check-compiler-errors": f"{TEAM_KIT}/check-compiler-errors",
     "get-pr-comments": f"{TEAM_KIT}/get-pr-comments",
     "fix-merge-conflicts": f"{TEAM_KIT}/fix-merge-conflicts",
-    "new-branch-and-pr": f"{TEAM_KIT}/new-branch-and-pr",
-    "what-did-i-get-done": f"{TEAM_KIT}/what-did-i-get-done",
-    "weekly-review": f"{TEAM_KIT}/weekly-review",
-    "deslop": f"{TEAM_KIT}/deslop",
 }
 
 # new skill -> list of (upstream skill name, upstream path)
@@ -88,6 +82,16 @@ ADAPTED: dict[str, list[tuple[str, str]]] = {
     "deliver-software": [("poteto-mode", f"{PSTACK}/poteto-mode")],
     "verify-ui": [("control-ui", f"{TEAM_KIT}/control-ui")],
     "verify-cli": [("control-cli", f"{TEAM_KIT}/control-cli")],
+    # GitHub workflows reclassified from copied to adapted: upstream logic kept,
+    # but GitHub access rewritten to be runtime-neutral instead of gh-bound.
+    "review-and-ship": [("review-and-ship", f"{TEAM_KIT}/review-and-ship")],
+    "make-pr-easy-to-review": [("make-pr-easy-to-review", f"{TEAM_KIT}/make-pr-easy-to-review")],
+    "loop-on-ci": [("loop-on-ci", f"{TEAM_KIT}/loop-on-ci")],
+    "fix-ci": [("fix-ci", f"{TEAM_KIT}/fix-ci")],
+    # Also reclassified: hardcoded default-branch assumptions replaced with
+    # dynamic base resolution.
+    "new-branch-and-pr": [("new-branch-and-pr", f"{TEAM_KIT}/new-branch-and-pr")],
+    "deslop": [("deslop", f"{TEAM_KIT}/deslop")],
 }
 
 ORIGINAL = [

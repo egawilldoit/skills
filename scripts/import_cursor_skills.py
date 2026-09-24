@@ -85,18 +85,12 @@ COPY_SKILLS = {
     "principle-type-system-discipline": f"{PSTACK}/principle-type-system-discipline",
     # cursor-team-kit
     "verify-this": f"{TEAM_KIT}/verify-this",
-    "review-and-ship": f"{TEAM_KIT}/review-and-ship",
-    "make-pr-easy-to-review": f"{TEAM_KIT}/make-pr-easy-to-review",
-    "loop-on-ci": f"{TEAM_KIT}/loop-on-ci",
-    "fix-ci": f"{TEAM_KIT}/fix-ci",
     "run-smoke-tests": f"{TEAM_KIT}/run-smoke-tests",
     "check-compiler-errors": f"{TEAM_KIT}/check-compiler-errors",
     "get-pr-comments": f"{TEAM_KIT}/get-pr-comments",
     "fix-merge-conflicts": f"{TEAM_KIT}/fix-merge-conflicts",
-    "new-branch-and-pr": f"{TEAM_KIT}/new-branch-and-pr",
     "what-did-i-get-done": f"{TEAM_KIT}/what-did-i-get-done",
     "weekly-review": f"{TEAM_KIT}/weekly-review",
-    "deslop": f"{TEAM_KIT}/deslop",
 }
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n?", re.DOTALL)

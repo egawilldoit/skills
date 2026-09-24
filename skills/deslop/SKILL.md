@@ -1,11 +1,11 @@
 ---
 name: deslop
-description: "Remove AI-generated code slop from a branch's diff and restore local style: stray comments, defensive checks on trusted paths, any-casts, and needless nesting. Use before review or after rapid generation. Keeps behavior unchanged."
+description: "Remove AI-generated code slop from a branch's diff and restore local style: stray comments, defensive checks on trusted paths, any-casts, and needless nesting. Use before review or after rapid generation. Resolve the branch's actual base branch rather than assuming main. Keeps behavior unchanged."
 ---
 
 # Remove AI code slop
 
-Check the diff against main and remove AI-generated slop introduced in the branch.
+Check the diff against the branch's base and remove AI-generated slop introduced in the branch. Resolve the actual base branch (the PR base, or the remote default branch) instead of assuming `main`.
 
 ## Focus Areas
 

@@ -1,6 +1,6 @@
 ---
 name: integrate-pr-stack
-description: "Safely land stacked pull requests one at a time. Use for a stack or chain of dependent PRs, when a finding must be fixed in the PR that introduced it, or when descendants need restacking after a base branch changes. Discovers the stack, verifies ancestry, maps each PR base and head, detects drift, repairs findings in the owning PR, restacks descendants by semantic intent rather than ours or theirs, recalculates diffs, revalidates, merges exactly one PR, then refreshes the remainder against the new main. Parallel preparation is allowed; parallel integration is not. For a single ordinary PR use review-and-ship."
+description: "Safely land stacked pull requests one at a time. Use for a stack or chain of dependent PRs, when a finding must be fixed in the PR that introduced it, or when descendants need restacking after a base branch changes. Discovers the stack, verifies ancestry, maps each PR base and head, detects drift, repairs findings in the owning PR, restacks descendants by semantic intent rather than ours or theirs, recalculates diffs, revalidates, merges exactly one PR, then refreshes the remainder against the updated base branch. Parallel preparation is allowed; parallel integration is not. For a single ordinary PR use review-and-ship."
 ---
 
 # Integrate PR stack
@@ -28,7 +28,7 @@ Do not use it for a single independent PR (`review-and-ship`). Do not use it to 
 ## Stack model
 
 ```text
-main
+<base branch>
   ^ base of PR 1
 PR 1 head  <- base of PR 2
 PR 2 head  <- base of PR 3
@@ -47,7 +47,7 @@ Each PR's base is the previous PR's head. Ancestry must hold: the base SHA is an
 6. Restack descendants after an ancestor changes. Rebase or re-target them so their diffs contain only their own change. Preserve semantic intent; do not resolve conflicts with a blanket ours or theirs.
 7. Recalculate diffs and revalidate each affected PR at its new head. Re-run `certify-pr-head` per PR.
 8. Merge exactly one PR. Never merge two at once.
-9. Refresh the remaining stack against the new main and repeat from step 2.
+9. Refresh the remaining stack against the updated base branch and repeat from step 2.
 
 ## Conflict policy
 

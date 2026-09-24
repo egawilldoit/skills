@@ -132,6 +132,28 @@
     "edge": "a multi-part change a human will review next week after I step away, and the definition of done is not yet falsifiable"
   },
   {
+    "skill": "deslop",
+    "direct": "Use $deslop to strip the AI-generated slop from this branch's diff.",
+    "indirect": "remove the stray comments and any-casts that were generated on this branch",
+    "incomplete": "clean up this branch's code",
+    "negative": "improve the pull request description and clean up the commit history without changing behavior",
+    "negative_expected": "make-pr-easy-to-review",
+    "collision": "remove the AI writing tells from this pull request description",
+    "collision_expected": "unslop",
+    "edge": "the base branch is develop, not main"
+  },
+  {
+    "skill": "fix-ci",
+    "direct": "Use $fix-ci to repair this failing check.",
+    "indirect": "the build job is red; read the logs and apply the smallest fix",
+    "incomplete": "CI is failing",
+    "negative": "watch all the attached checks and keep iterating until the whole set is green",
+    "negative_expected": "loop-on-ci",
+    "collision": "run the compile and type-check commands and report the failures",
+    "collision_expected": "check-compiler-errors",
+    "edge": "the failing check points to an external CI provider whose logs I cannot open"
+  },
+  {
     "skill": "integrate-pr-stack",
     "direct": "Use $integrate-pr-stack to land this chain of dependent PRs one at a time.",
     "indirect": "the base branch moved, so the descendant PRs need restacking and only one should merge at a time",
@@ -141,6 +163,17 @@
     "collision": "after the restack, confirm the reviewed approval still matches the new PR head",
     "collision_expected": "certify-pr-head",
     "edge": "one finding belongs in the PR that introduced it, but the descendants are already restacked onto a newer main"
+  },
+  {
+    "skill": "loop-on-ci",
+    "direct": "Use $loop-on-ci to drive this pull request's checks to green.",
+    "indirect": "keep watching the attached checks and fix failures until every required check passes",
+    "incomplete": "get CI green",
+    "negative": "diagnose this one failing check and apply the smallest fix",
+    "negative_expected": "fix-ci",
+    "collision": "review this branch, run the tests, and open the pull request",
+    "collision_expected": "review-and-ship",
+    "edge": "checks from two providers are attached; re-read the full set after each push"
   },
   {
     "skill": "maintain-verification-workflow",
@@ -154,6 +187,17 @@
     "edge": "the workflow docs drifted but there may also be a real product regression; fix the docs without hiding it"
   },
   {
+    "skill": "make-pr-easy-to-review",
+    "direct": "Use $make-pr-easy-to-review to tidy this pull request before reviewers see it.",
+    "indirect": "clean up the noisy commits and improve the PR description without changing behavior",
+    "incomplete": "make this PR easier to review",
+    "negative": "review this branch for bugs and regressions and open the pull request",
+    "negative_expected": "review-and-ship",
+    "collision": "remove the AI-generated code slop and stray comments from this branch",
+    "collision_expected": "deslop",
+    "edge": "rewrite the commits into dependency order but keep the tree identical"
+  },
+  {
     "skill": "mine-work-patterns",
     "direct": "Use $mine-work-patterns to mine the last quarter of history for recurring friction worth automating.",
     "indirect": "we keep re-solving the same setup steps; what should we turn into a skill or script?",
@@ -163,6 +207,17 @@
     "collision": "summarize my authored commits from last week into a classified recap",
     "collision_expected": "weekly-review",
     "edge": "I noticed the same manual step three times this month; is it worth encoding or should we reuse an existing skill?"
+  },
+  {
+    "skill": "new-branch-and-pr",
+    "direct": "Use $new-branch-and-pr to start this fix on a fresh branch and open a pull request.",
+    "indirect": "branch off the default branch, do the work, and open a concise pull request",
+    "incomplete": "start a branch and PR for this",
+    "negative": "review the existing branch and update its pull request",
+    "negative_expected": "review-and-ship",
+    "collision": "land this chain of dependent pull requests one at a time",
+    "collision_expected": "integrate-pr-stack",
+    "edge": "the repository's default branch is not main, so resolve the base first"
   },
   {
     "skill": "parallelize-work",
@@ -229,6 +284,17 @@
     "collision": "pull the durable lessons from this finished session and route each to an artifact",
     "collision_expected": "work-retrospective",
     "edge": "the issue tracker and the branch disagree about what is done; I need the current verified state to resume"
+  },
+  {
+    "skill": "review-and-ship",
+    "direct": "Use $review-and-ship to take this ordinary branch to a merge-ready pull request.",
+    "indirect": "review this branch for bugs and regressions, run the focused tests, and open the pull request",
+    "incomplete": "ship this branch",
+    "negative": "land this stack of dependent pull requests one at a time",
+    "negative_expected": "integrate-pr-stack",
+    "collision": "independently challenge this diff for correctness and security before it ships",
+    "collision_expected": "adversarial-review",
+    "edge": "the diff is large; split the review across parallel subagents, then open the pull request"
   },
   {
     "skill": "trace-artifact-provenance",

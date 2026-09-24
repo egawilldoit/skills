@@ -100,18 +100,20 @@
     {
       "skill": "deslop",
       "origin": "cursor/plugins",
+      "source_skill": "deslop",
       "source_path": "cursor-team-kit/skills/deslop",
       "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
       "license": "MIT",
-      "mode": "copied"
+      "mode": "adapted"
     },
     {
       "skill": "fix-ci",
       "origin": "cursor/plugins",
+      "source_skill": "fix-ci",
       "source_path": "cursor-team-kit/skills/fix-ci",
       "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
       "license": "MIT",
-      "mode": "copied"
+      "mode": "adapted"
     },
     {
       "skill": "fix-merge-conflicts",
@@ -136,10 +138,11 @@
     {
       "skill": "loop-on-ci",
       "origin": "cursor/plugins",
+      "source_skill": "loop-on-ci",
       "source_path": "cursor-team-kit/skills/loop-on-ci",
       "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
       "license": "MIT",
-      "mode": "copied"
+      "mode": "adapted"
     },
     {
       "skill": "maintain-verification-workflow",
@@ -153,10 +156,11 @@
     {
       "skill": "make-pr-easy-to-review",
       "origin": "cursor/plugins",
+      "source_skill": "make-pr-easy-to-review",
       "source_path": "cursor-team-kit/skills/make-pr-easy-to-review",
       "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
       "license": "MIT",
-      "mode": "copied"
+      "mode": "adapted"
     },
     {
       "skill": "mine-work-patterns",
@@ -176,10 +180,11 @@
     {
       "skill": "new-branch-and-pr",
       "origin": "cursor/plugins",
+      "source_skill": "new-branch-and-pr",
       "source_path": "cursor-team-kit/skills/new-branch-and-pr",
       "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
       "license": "MIT",
-      "mode": "copied"
+      "mode": "adapted"
     },
     {
       "skill": "parallelize-work",
@@ -404,10 +409,11 @@
     {
       "skill": "review-and-ship",
       "origin": "cursor/plugins",
+      "source_skill": "review-and-ship",
       "source_path": "cursor-team-kit/skills/review-and-ship",
       "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
       "license": "MIT",
-      "mode": "copied"
+      "mode": "adapted"
     },
     {
       "skill": "run-smoke-tests",
