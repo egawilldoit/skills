@@ -137,6 +137,14 @@ class TestVerdicts(unittest.TestCase):
         out = run_certify()
         self.assertEqual(out["verdict"], "INCOMPLETE")
 
+    def test_evidence_file_accepts_sha_objects(self):
+        path = evidence(head=HEAD, reviewed={"sha": HEAD}, tested={"sha": HEAD},
+                        ci={"associated_head_sha": HEAD, "executed_sha": HEAD,
+                            "conclusion": "success"})
+        out = run_certify("--evidence", path)
+        self.assertEqual(out["verdict"], "EXACT_HEAD_CERTIFIED")
+        self.assertEqual(out["ci_execution_mode"], "HEAD")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -99,6 +99,13 @@ def classify(evidence_sha, reference, cwd):
     return "stale", full, "does not match head"
 
 
+def evidence_sha_of(value):
+    """Accept either a bare SHA string or an object with a "sha" field."""
+    if isinstance(value, dict):
+        return value.get("sha")
+    return value
+
+
 def classify_ci(ci_evidence, reference, cwd):
     """Classify CI evidence, keeping associated and executed SHA separate.
 
@@ -213,9 +220,9 @@ def main():
     if args.evidence:
         with open(args.evidence, "r", encoding="utf-8") as handle:
             data = json.load(handle)
-        reviewed = reviewed or data.get("reviewed")
-        tested = tested or data.get("tested")
-        evidence_head = evidence_head or data.get("head")
+        reviewed = reviewed or evidence_sha_of(data.get("reviewed"))
+        tested = tested or evidence_sha_of(data.get("tested"))
+        evidence_head = evidence_head or evidence_sha_of(data.get("head"))
         ci_evidence = data.get("ci")
 
     # CLI flags win over the evidence file for the CI block.
