@@ -100,11 +100,29 @@ class TestVerdicts(unittest.TestCase):
         self.assertEqual(out["evidence"]["tested"]["status"], "missing")
 
     def test_abbreviated_resolvable_sha_expands(self):
-        out = run_certify("--reviewed", "829c3340", "--tested", HEAD,
-                          "--ci-associated-head", HEAD, "--ci-executed-sha", HEAD,
-                          "--ci-conclusion", "success")
-        self.assertEqual(out["evidence"]["reviewed"]["sha"],
-                         "829c3340f4fc68a77e1d6c94bd60ec8c9574beaf")
+        # Build a self-contained temp repo so the abbreviation does not
+        # depend on this repository's history being non-shallow.
+        import subprocess as sp
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(__import__("shutil").rmtree, tmp, ignore_errors=True)
+        sp.run(f"git init -q -b main {tmp / 'repo'}", shell=True, check=True)
+        sp.run(f"git -C {tmp / 'repo'} config user.email t@t && "
+               f"git -C {tmp / 'repo'} config user.name t", shell=True, check=True)
+        sp.run(f"cd {tmp / 'repo'} && echo a > a && git add a && git commit -qm one && "
+               "echo b > b && git add b && git commit -qm two", shell=True, check=True)
+        old = sp.run(f"git -C {tmp / 'repo'} rev-parse HEAD~1",
+                     shell=True, capture_output=True, text=True).stdout.strip()
+        abbrev = old[:8]
+        proc = subprocess.run(
+            [sys.executable, str(SCRIPT), "--head", HEAD, "--cwd", str(tmp / "repo"),
+             "--json", "--reviewed", abbrev, "--tested", HEAD,
+             "--ci-associated-head", HEAD, "--ci-executed-sha", HEAD,
+             "--ci-conclusion", "success"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        out = json.loads(proc.stdout)
+        self.assertEqual(out["evidence"]["reviewed"]["sha"], old)
         self.assertEqual(out["verdict"], "STALE_EVIDENCE")
 
     def test_merge_result_with_all_exact_reviewed_tested_still_incomplete(self):

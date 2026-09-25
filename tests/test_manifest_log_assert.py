@@ -91,15 +91,39 @@ class TestAssertCheckoutSha(unittest.TestCase):
         self.assertIn(self.HEAD, proc.stdout)
 
     def test_exact_head_mismatch_fails(self):
-        other = subprocess.run(["git", "rev-parse", "HEAD~1"], cwd=REPO_ROOT,
-                               capture_output=True, text=True).stdout.strip()
-        proc = self.run_assert("--expected", other, "--mode", "exact-head")
-        self.assertEqual(proc.returncode, 1)
+        # Use a self-contained temp repo so this does not depend on the
+        # checkout being non-shallow.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            subprocess.run(f"git init -q -b main {repo}", shell=True, check=True)
+            subprocess.run(f"git -C {repo} config user.email t@t && "
+                           f"git -C {repo} config user.name t", shell=True, check=True)
+            subprocess.run(f"cd {repo} && echo a > a && git add a && git commit -qm one && "
+                           "echo b > b && git add b && git commit -qm two", shell=True, check=True)
+            other = subprocess.run(f"git -C {repo} rev-parse HEAD~1",
+                                   shell=True, capture_output=True, text=True).stdout.strip()
+            proc = subprocess.run(
+                [sys.executable, str(REPO_ROOT / "scripts" / "assert_checkout_sha.py"),
+                 "--expected", other, "--mode", "exact-head"],
+                cwd=repo, capture_output=True, text=True)
+            self.assertEqual(proc.returncode, 1)
 
     def test_merge_result_mode_requires_difference(self):
-        proc = self.run_assert("--expected", self.HEAD, "--mode", "merge-result")
-        self.assertEqual(proc.returncode, 1)
-        self.assertIn("synthetic merge", proc.stderr)
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            subprocess.run(f"git init -q -b main {repo}", shell=True, check=True)
+            subprocess.run(f"git -C {repo} config user.email t@t && "
+                           f"git -C {repo} config user.name t", shell=True, check=True)
+            subprocess.run(f"cd {repo} && echo a > a && git add a && git commit -qm one",
+                           shell=True, check=True)
+            head = subprocess.run(f"git -C {repo} rev-parse HEAD",
+                                  shell=True, capture_output=True, text=True).stdout.strip()
+            proc = subprocess.run(
+                [sys.executable, str(REPO_ROOT / "scripts" / "assert_checkout_sha.py"),
+                 "--expected", head, "--mode", "merge-result"],
+                cwd=repo, capture_output=True, text=True)
+            self.assertEqual(proc.returncode, 1)
+            self.assertIn("synthetic merge", proc.stderr)
 
     def test_identity_block_present(self):
         proc = self.run_assert("--expected", self.HEAD, "--event", "push")
