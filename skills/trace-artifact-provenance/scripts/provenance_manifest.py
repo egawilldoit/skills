@@ -4,6 +4,29 @@
 Read-only with respect to the artifact. Writes only the manifest when asked.
 Plain Python 3 standard library only.
 
+Provenance status vocabulary (do not confuse "supplied by caller" with
+"verified by independent evidence"):
+
+    UNKNOWN    no identity is available
+    SUPPLIED   an identifier was provided by the caller but not independently
+               resolved to a real object
+    RESOLVED   the identifier was independently resolved to a real
+               local/platform object, but lineage has not been proven
+    VERIFIED   independent evidence establishes the claimed relationship
+
+Caller-supplied build IDs, release IDs, and deployment identifiers stay
+SUPPLIED at most. A supplied source SHA becomes RESOLVED only when it
+independently resolves to a local commit; that still does not prove the
+artifact was built from it. VERIFIED requires external evidence proving the
+claimed relationship (for example, build metadata reporting both the source
+SHA and the artifact digest). Locally computed digests, sizes, and file
+counts are VERIFIED because this script computed them; that says nothing
+about the source-to-build chain.
+
+Directory artifacts hash a deterministic tree representation that includes
+symlinks by relative path, entry type, and target (never followed), so two
+trees differing only by symlink target hash differently.
+
 Usage:
     python3 provenance_manifest.py --artifact ./dist/app.apk --kind apk \
         --source-sha <sha> --output manifest.json
@@ -24,7 +47,7 @@ import os
 import subprocess
 import sys
 
-MANIFEST_VERSION = 1
+MANIFEST_VERSION = 2
 SUPPORTED_ALGORITHMS = ("sha256", "sha512")
 
 
@@ -52,45 +75,61 @@ def file_digest(path, algorithm):
 def tree_digest(root, algorithm):
     """Deterministic digest over a directory tree.
 
-    Sorted relative paths, then per file: path bytes, then content bytes.
+    Sorted relative paths, then per entry: path bytes, entry type, then
+    content bytes (files) or target bytes (symlinks). Symlinks are included
+    as `symlink` entries with their target; they are never followed. Trees
+    that differ only by symlink target therefore hash differently.
     """
     hasher = hashlib.new(algorithm)
-    files = []
-    for dirpath, dirnames, filenames in os.walk(root):
+    entries = []
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
         dirnames.sort()
-        for name in sorted(filenames):
+        for name in sorted(dirnames) + sorted(filenames):
             full = os.path.join(dirpath, name)
-            if os.path.islink(full):
-                continue
             rel = os.path.relpath(full, root).replace(os.sep, "/")
-            files.append((rel, full))
-    files.sort(key=lambda item: item[0].encode("utf-8"))
-    for rel, full in files:
+            if os.path.islink(full):
+                entries.append((rel, "symlink", full))
+            elif os.path.isdir(full):
+                continue
+            else:
+                entries.append((rel, "file", full))
+    entries.sort(key=lambda item: item[0].encode("utf-8"))
+    file_count = 0
+    for rel, kind, full in entries:
         hasher.update(rel.encode("utf-8"))
         hasher.update(b"\0")
-        with open(full, "rb") as handle:
-            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                hasher.update(chunk)
+        hasher.update(kind.encode("utf-8"))
         hasher.update(b"\0")
-    return hasher.hexdigest(), len(files)
+        if kind == "symlink":
+            target = os.readlink(full)
+            hasher.update(target.encode("utf-8"))
+            hasher.update(b"\0")
+        else:
+            file_count += 1
+            with open(full, "rb") as handle:
+                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                    hasher.update(chunk)
+            hasher.update(b"\0")
+    return hasher.hexdigest(), file_count, len(entries)
 
 
 def describe_artifact(path, algorithm):
-    if not os.path.exists(path):
-        raise FileNotFoundError(path)
-    if os.path.isdir(path):
-        digest, count = tree_digest(path, algorithm)
+    if os.path.isdir(path) and not os.path.islink(path):
+        digest, file_count, entry_count = tree_digest(path, algorithm)
         size = 0
-        for dirpath, _dirnames, filenames in os.walk(path):
+        for dirpath, _dirnames, filenames in os.walk(path, followlinks=False):
             for name in filenames:
                 full = os.path.join(dirpath, name)
                 if not os.path.islink(full):
                     size += os.path.getsize(full)
         return {"kind_path": "directory", "digest": digest, "size_bytes": size,
-                "file_count": count}
+                "file_count": file_count, "entry_count": entry_count}
+    if not os.path.exists(path):
+        raise FileNotFoundError(path)
     digest = file_digest(path, algorithm)
     return {"kind_path": "file", "digest": digest,
-            "size_bytes": os.path.getsize(path), "file_count": 1}
+            "size_bytes": os.path.getsize(path), "file_count": 1,
+            "entry_count": 1}
 
 
 def now_iso():
@@ -98,35 +137,88 @@ def now_iso():
         microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def resolve_sha_locally(sha, cwd):
+    """True iff the SHA independently resolves to a local commit."""
+    if not sha:
+        return False
+    ok, _ = run(["git", "rev-parse", "--verify", "-q", sha + "^{commit}"], cwd=cwd)
+    return ok
+
+
 def build_manifest(args):
     info = describe_artifact(args.artifact, args.digest_algorithm)
 
     source_sha = args.source_sha
-    source_sha_status = "PROVEN" if source_sha else "UNKNOWN"
-    if not source_sha:
+    source_sha_status = "UNKNOWN"
+    if source_sha:
+        # Caller-supplied: only independently resolving it locally upgrades
+        # SUPPLIED to RESOLVED. Resolution never proves the artifact was
+        # built from this commit; only external build evidence can verify
+        # the source-to-build relationship.
+        source_sha_status = "SUPPLIED"
+        if resolve_sha_locally(source_sha, args.cwd):
+            source_sha_status = "RESOLVED"
+    else:
+        # Inferred from the current checkout: the commit exists locally
+        # (RESOLVED), but this is not proof that the artifact was built
+        # from it.
         ok, sha = run(["git", "rev-parse", "HEAD"], cwd=args.cwd)
         if ok and sha:
             source_sha = sha
-            source_sha_status = "PROVEN"
+            source_sha_status = "RESOLVED"
 
     source_ref = args.source_ref
-    if not source_ref:
+    source_ref_status = "UNKNOWN"
+    if source_ref:
+        source_ref_status = "SUPPLIED"
+    else:
         ok, ref = run(["git", "symbolic-ref", "-q", "HEAD"], cwd=args.cwd)
         if ok and ref:
             source_ref = ref
+            source_ref_status = "RESOLVED"
 
     repository = args.repository
-    if not repository:
+    repository_status = "UNKNOWN"
+    if repository:
+        repository_status = "SUPPLIED"
+    else:
         ok, url = run(["git", "remote", "get-url", "origin"], cwd=args.cwd)
         if ok and url:
             repository = url
+            repository_status = "RESOLVED"
+
+    # Supplied identifiers are at most SUPPLIED. Independent resolution by
+    # an external platform (CI provider, deployment API) would be RESOLVED,
+    # and only external evidence tying them to this artifact is VERIFIED.
+    # This script cannot query those platforms, so it never claims that.
+    build_status = "SUPPLIED" if args.build_id else "UNKNOWN"
+    release_status = "SUPPLIED" if args.release_id else "UNKNOWN"
+    deployment_status = "UNKNOWN"
+    if args.deployment_target and (args.deployment_version or args.deployment_digest):
+        deployment_status = "SUPPLIED"
+
+    # File or directory recheck command: directory trees are hashed with a
+    # custom deterministic representation, so sha256sum/sha512sum on a
+    # directory is invalid. Emit only what actually re-verifies.
+    recheck_commands = [
+        "python3 provenance_manifest.py --artifact %s --verify <manifest.json>"
+        % os.path.abspath(args.artifact),
+    ]
+    if info["kind_path"] == "file":
+        recheck_commands.insert(
+            0,
+            "%s %s" % ("sha256sum" if args.digest_algorithm == "sha256" else "sha512sum",
+                       os.path.abspath(args.artifact)),
+        )
 
     manifest = {
         "manifest_version": MANIFEST_VERSION,
         "generated_at": now_iso(),
         "source": {
             "repository": repository,
+            "repository_status": repository_status,
             "ref": source_ref,
+            "ref_status": source_ref_status,
             "sha": source_sha,
             "sha_status": source_sha_status,
         },
@@ -135,7 +227,7 @@ def build_manifest(args):
             "pipeline": args.build_pipeline,
             "builder": args.build_builder,
             "inputs": args.build_input or [],
-            "status": "PROVEN" if args.build_id else "UNKNOWN",
+            "id_status": build_status,
         },
         "artifact": {
             "kind": args.kind,
@@ -145,13 +237,18 @@ def build_manifest(args):
             "digest": info["digest"],
             "digest_algorithm": args.digest_algorithm,
             "file_count": info["file_count"],
-            "status": "PROVEN",
+            "entry_count": info["entry_count"],
+            # Computed locally by this script: the digest is VERIFIED as a
+            # property of this artifact. This does NOT imply the full
+            # source->build->deployment chain is verified; chain statuses
+            # above carry that evidence separately.
+            "status": "VERIFIED",
         },
         "release": {
             "id": args.release_id,
             "name": args.release_name,
             "url": args.release_url,
-            "status": "SUPPORTED" if args.release_id else "UNKNOWN",
+            "id_status": release_status,
         },
         "deployment": {
             "kind": args.deployment_kind,
@@ -159,17 +256,13 @@ def build_manifest(args):
             "environment": args.deployment_environment,
             "version": args.deployment_version,
             "digest": args.deployment_digest,
-            "status": "PROVEN" if (args.deployment_target and
-                                   (args.deployment_version or args.deployment_digest))
-                      else "UNKNOWN",
+            "status": deployment_status,
         },
         "verification": {
             "evidence_level": "E4",
-            "recheck_commands": [
-                "%s %s" % ("sha256sum" if args.digest_algorithm == "sha256" else "sha512sum",
-                           os.path.abspath(args.artifact)),
-                "python3 provenance_manifest.py --artifact %s --verify <manifest.json>" % os.path.abspath(args.artifact),
-            ],
+            "artifact_evidence": "digest, size, and entry count computed locally",
+            "chain_evidence": "see per-section statuses; partial provenance is expected",
+            "recheck_commands": recheck_commands,
         },
     }
     return manifest

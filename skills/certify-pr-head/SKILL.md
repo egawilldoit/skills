@@ -1,6 +1,6 @@
 ---
 name: certify-pr-head
-description: "Verify that acceptance evidence belongs to the exact current head of a pull request. Use before declaring a PR merge-ready, after pushing fixes to a reviewed PR, after a rebase or restack, or whenever review, test, or CI evidence may refer to an older commit. Checks the current PR head SHA against the reviewed, tested, and CI/check SHAs and confirms the branch has not moved afterward. Returns EXACT_HEAD_CERTIFIED, STALE_EVIDENCE, HEAD_MOVED, or INCOMPLETE. For source-to-artifact lineage use trace-artifact-provenance; for a full release gate use certify-release."
+description: "Verify that acceptance evidence belongs to the exact current head of a pull request. Use before declaring a PR merge-ready, after pushing fixes to a reviewed PR, after a rebase or restack, or whenever review, test, or CI evidence may refer to an older commit. Checks the current PR head SHA against the reviewed, tested, and CI SHAs, distinguishing the CI-associated head SHA from the SHA the CI job actually executed, and confirms the branch has not moved afterward. Returns EXACT_HEAD_CERTIFIED, STALE_EVIDENCE, HEAD_MOVED, or INCOMPLETE. For source-to-artifact lineage use trace-artifact-provenance; for a full release gate use certify-release."
 ---
 
 # Certify PR head
@@ -29,9 +29,12 @@ For each source, capture the SHA it actually covers, not the SHA you hope it cov
 current PR head      the head SHA the hosting platform reports right now
 reviewed SHA         the commit the approving review was submitted against
 tested SHA           the commit the test run executed
-CI/check SHA         the commit the check run or workflow is attached to
+CI associated SHA    the head/check-suite SHA the platform associates the check with
+CI executed SHA      the exact commit checked out and executed inside the CI job
 branch tip           the local and remote branch tip SHA
 ```
+
+The CI associated SHA and the CI executed SHA are different facts and can differ. A check attached to the head that executed a synthetic merge commit is merge-result evidence: it proves the proposed head validates when merged with the current base, not that the head itself was validated. Exact-head certification requires associated SHA == executed SHA == current head with a successful conclusion.
 
 Then confirm the head has not moved after the evidence was produced: compare the current head to each evidence SHA and check the timestamps of evidence against the head commit time.
 
@@ -47,10 +50,10 @@ Then confirm the head has not moved after the evidence was produced: compare the
 ## Verdicts
 
 ```text
-EXACT_HEAD_CERTIFIED   every required evidence source matches the current head, and the head did not move
+EXACT_HEAD_CERTIFIED   every required evidence source matches the current head, CI executed on that exact head successfully, and the head did not move
 STALE_EVIDENCE         one or more evidence sources cover an older commit while the head is unchanged
 HEAD_MOVED             the head changed after evidence was produced, so the evidence is invalidated
-INCOMPLETE             a required SHA or evidence source is missing or could not be resolved
+INCOMPLETE             a required SHA or evidence source is missing, unresolved, or only proves a merge result
 ```
 
 Rules:
@@ -58,6 +61,7 @@ Rules:
 - `STALE_EVIDENCE` and `HEAD_MOVED` both block merge. They differ in cause: stale evidence means the evidence was never for this head; head moved means it was, then the head changed.
 - Never downgrade `HEAD_MOVED` to a pass because the diff is small.
 - Abbreviated SHAs are not acceptable evidence unless expanded and matched exactly.
+- CI evidence alone is not enough: the check must have executed the exact head (associated == executed == head, conclusion success). Merge-result CI is reported separately and never substitutes for exact-head execution.
 - A re-run of CI on the current head can clear stale evidence. Re-certify after it completes.
 
 ## Distinguishing the two failures
@@ -86,7 +90,10 @@ PR: <number>
 REFERENCE HEAD: <full sha>
 REVIEWED: <full sha or unknown> -> <match|stale|missing>
 TESTED: <full sha or unknown> -> <match|stale|missing>
-CI/CHECKS: <full sha or unknown> -> <match|stale|missing>
+CI ASSOCIATED HEAD: <full sha or unknown> -> <match|stale|missing>
+CI EXECUTED SHA: <full sha or unknown> -> <match|stale|missing>
+CI EXECUTION MODE: HEAD | MERGE_RESULT | UNKNOWN
+CI CONCLUSION: <success|failure|unknown>
 BRANCH MOVED AFTER EVIDENCE: <yes|no|unknown>
 BLOCKING SOURCES: <list, or none>
 NEXT: <the single next action, or AUTHORITY_REQUIRED>

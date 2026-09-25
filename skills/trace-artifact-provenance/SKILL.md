@@ -52,16 +52,30 @@ Every link is optional only if the task does not need it. A link that is unknown
 3. Locate the artifact. For a file or directory, compute the digest locally. For a container image or platform deployment, use the digest the platform reports.
 4. Run `scripts/provenance_manifest.py` to compute digests and emit the manifest.
 5. Attach the release and deployment identity when they exist.
-6. Mark each link `PROVEN`, `SUPPORTED`, or `UNKNOWN` and record the evidence level.
+6. Mark each link with the provenance-state vocabulary and record the evidence level.
 7. State how a reviewer independently re-checks each digest.
+
+## Provenance states
+
+An identifier someone supplies is not proof. The manifest distinguishes what was supplied from what was independently established:
+
+```text
+UNKNOWN    no identity is available
+SUPPLIED   an identifier was provided by the caller but not independently resolved
+RESOLVED   the identifier was independently resolved to a real local or platform object, but lineage is not proven
+VERIFIED   independent evidence establishes the claimed relationship
+```
+
+Caller-supplied build IDs, release IDs, deployment targets, and deployment versions stay `SUPPLIED` unless independently resolved by querying the platform that owns them. A supplied source SHA that resolves to a local commit is `RESOLVED` — resolution proves the commit exists, not that the artifact was built from it. Only external evidence tying the source SHA to the build output (for example, build metadata reporting both the source SHA and the artifact digest) makes the source-to-build relationship `VERIFIED`. A locally computed digest is `VERIFIED` as a property of the artifact; that never implies the full chain is verified.
 
 ## Digest rules
 
 - Prefer SHA-256. Record the algorithm with the digest.
-- For a directory or bundle, hash a deterministic listing: relative paths sorted, then each file's bytes. Record the file count.
+- For a directory or bundle, hash a deterministic tree representation: relative paths sorted, entry type, then each file's bytes or each symlink's target. Record the file and entry counts. Symlinks are included by target and never followed, so two trees differing only by a symlink target hash differently.
 - Never hash a re-encoded or re-zipped artifact and call it the original. Hash the exact bytes distributed.
 - For a container image, the image digest is the identity, not the mutable tag.
 - Two artifacts with the same digest are the same bytes. Same tag is not the same bytes.
+- A directory digest is a custom deterministic representation: re-verify it with `provenance_manifest.py --artifact <path> --verify <manifest>`, not `sha256sum <path>`.
 
 ## Manifest
 
@@ -70,14 +84,15 @@ The manifest is the deliverable. It is JSON so a reviewer can diff and verify it
 ```text
 manifest_version
 generated_at
-source:     {sha, ref, repository}
-build:      {id, pipeline, builder, inputs}
-artifact:   {kind, name, path, size_bytes, digest, digest_algorithm, file_count}
-release:    {id, name, url}
-deployment: {kind, target, environment, version, digest}
-verification: {recheck_commands, evidence_level}
-status:     {proven, supported, unknown}
+source:      {sha + sha_status, ref + ref_status, repository + repository_status}
+build:       {id, pipeline, builder, inputs, id_status}
+artifact:    {kind, name, path, size_bytes, digest, digest_algorithm, file_count, entry_count, status}
+release:     {id + id_status, name, url}
+deployment:  {kind, target, environment, version, digest, status}
+verification: {recheck_commands, evidence_level, artifact_evidence, chain_evidence}
 ```
+
+`verification.artifact_evidence` and `verification.chain_evidence` are kept separate on purpose: a locally computed digest verifies the artifact bytes, while the source->build->deployment chain stays `PARTIAL` unless each link was independently established.
 
 ## Independent re-check
 
@@ -96,6 +111,8 @@ platform:  the deployment's reported commit and build id
 - Record the digest algorithm. A bare hex string is ambiguous.
 - Never infer a deployment's commit from timing. Read the platform's reported value.
 - Never claim a deployment matches a commit without comparing the platform's commit field to the source SHA.
+- A caller-supplied identifier is at most `SUPPLIED`. Never upgrade it to `VERIFIED` without independent evidence.
+- A locally computed digest verifies the artifact bytes only. Do not claim the source->build chain is proven because the digest was computed.
 - Mark unknown links unknown. `E4` requires a real digest; do not report it otherwise.
 - Do not invent build ids, pipeline names, or platform fields.
 
@@ -104,11 +121,11 @@ platform:  the deployment's reported commit and build id
 ```text
 PROVENANCE: COMPLETE | PARTIAL | UNVERIFIABLE
 EVIDENCE: E0..E6
-SOURCE SHA: <full sha or unknown>
+SOURCE SHA: <full sha + status, or unknown>
 ARTIFACT: <kind>, digest <algo:hex> or unknown
-RELEASE: <id or unknown>
-DEPLOYMENT: <target and version or unknown>
-CHAIN: <per link: PROVEN, SUPPORTED, or UNKNOWN>
+RELEASE: <id + status, or unknown>
+DEPLOYMENT: <target and version + status, or unknown>
+CHAIN: <per link: UNKNOWN, SUPPLIED, RESOLVED, or VERIFIED>
 RECHECK: <commands or procedures>
 BLOCKERS: <type and detail, or none>
 NEXT: <the single next action>

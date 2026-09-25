@@ -15,12 +15,28 @@ reviewed SHA
 tested SHA
   the commit the test run checked out; CI logs or the workflow run's head SHA
 
-CI/check SHA
-  the check run or status context head SHA, not the merge ref
+CI associated head SHA
+  the head/check-suite SHA the platform associates the check with
+
+CI executed SHA
+  the exact commit checked out and executed inside the validation job,
+  from the job's checkout step or a proven executed-SHA assertion
 
 branch tip
   local branch HEAD and its remote tracking ref, compared for equality
 ```
+
+`associated_head_sha` and `executed_sha` are two separate facts and can differ:
+
+```text
+associated_head_sha = PR HEAD, executed_sha = synthetic PR merge SHA
+  -> merge-result validation only; never exact-head certification
+
+associated_head_sha == executed_sha == current head, conclusion success
+  -> exact-head certification possible
+```
+
+A check attached to the head but executing a synthetic merge commit is reported as MERGE_RESULT evidence; it can never satisfy EXACT_HEAD_CERTIFIED.
 
 ## Common traps
 
