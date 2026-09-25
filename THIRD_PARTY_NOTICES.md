@@ -63,8 +63,6 @@ From `cursor-team-kit/skills/` (author: Eric Zakariasson):
 
 ```text
 verify-this
-run-smoke-tests
-check-compiler-errors
 get-pr-comments
 fix-merge-conflicts
 what-did-i-get-done
@@ -101,6 +99,8 @@ loop-on-ci                         <- cursor-team-kit/skills/loop-on-ci
 fix-ci                             <- cursor-team-kit/skills/fix-ci
 new-branch-and-pr                  <- cursor-team-kit/skills/new-branch-and-pr
 deslop                             <- cursor-team-kit/skills/deslop
+check-compiler-errors              <- cursor-team-kit/skills/check-compiler-errors
+run-smoke-tests                    <- cursor-team-kit/skills/run-smoke-tests
 ```
 
 The six `cursor-team-kit` skills above were reclassified from copied to
@@ -109,6 +109,11 @@ branch handling were rewritten to be runtime-neutral: a native or connected
 GitHub capability is preferred, the authenticated GitHub CLI is a fallback, and
 the actual base branch is resolved instead of assuming `main`. Attribution to
 the upstream authors is unchanged.
+
+`check-compiler-errors` and `run-smoke-tests` were also reclassified as
+adapted. Their upstream diagnostic workflows are preserved, but finding a
+failure no longer authorizes code changes. They diagnose by default and repair
+only when edits are explicitly requested or already authorized.
 
 ## Upstream license notices
 
