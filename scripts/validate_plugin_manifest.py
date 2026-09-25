@@ -8,12 +8,17 @@ Source of truth:
 
 A local copy of the exact 1.0.0 schema is vendored at
 references/agent-plugin-schema-1.0.0.json so validation is deterministic and
-offline. The vendored file is the canonical schema, not a home-grown
-approximation: this script refuses to run if the local copy diverges from the
-expected 1.0.0 identifier.
+offline. The repository pins the vendored file's expected SHA-256 digest at
+references/agent-plugin-schema-1.0.0.sha256; this script refuses to run if the
+vendored bytes no longer match that pin. The pin is integrity against local
+drift, not a live comparison against the canonical URL (no network fetch is
+performed).
 
 Layers:
-  1. JSON Schema validation against the official 1.0.0 schema (closed manifest:
+  1. Vendored-schema integrity: SHA-256 of the vendored schema must equal the
+     committed pin (references/agent-plugin-schema-1.0.0.sha256), and the
+     schema's $id must be the canonical 1.0.0 identifier.
+  2. JSON Schema validation against the vendored 1.0.0 schema (closed manifest:
      only $schema, name, version, description, author, homepage, repository,
      license, keywords, extensions are permitted at the root).
   2. Spec-level checks the schema cannot express, with clear diagnostics:
@@ -37,6 +42,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_MANIFEST = REPO_ROOT / "plugin.json"
 VENDORED_SCHEMA = REPO_ROOT / "references" / "agent-plugin-schema-1.0.0.json"
+SCHEMA_DIGEST_PIN = REPO_ROOT / "references" / "agent-plugin-schema-1.0.0.sha256"
 
 CANONICAL_SCHEMA_ID = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 ALLOWED_ROOT_FIELDS = {
@@ -46,7 +52,23 @@ ALLOWED_ROOT_FIELDS = {
 OBSOLETE_ROOT_FIELDS = {"skills", "interface", "mcpServers", "hooks", "apps"}
 
 
+def verify_schema_pin() -> None:
+    """Refuse to validate if the vendored schema diverges from its pinned digest."""
+    import hashlib
+
+    if not SCHEMA_DIGEST_PIN.is_file():
+        raise SystemExit(f"schema digest pin missing: {SCHEMA_DIGEST_PIN}")
+    expected = SCHEMA_DIGEST_PIN.read_text().split()[0].strip().lower()
+    actual = hashlib.sha256(VENDORED_SCHEMA.read_bytes()).hexdigest()
+    if actual != expected:
+        raise SystemExit(
+            f"vendored schema digest {actual} does not match pinned {expected}; "
+            f"update both {VENDORED_SCHEMA.name} and {SCHEMA_DIGEST_PIN.name} together"
+        )
+
+
 def load_schema() -> dict:
+    verify_schema_pin()
     schema = json.loads(VENDORED_SCHEMA.read_text())
     if schema.get("$id") != CANONICAL_SCHEMA_ID:
         raise SystemExit(

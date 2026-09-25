@@ -28,6 +28,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = REPO_ROOT / "skills"
 
+# The catalog imports from a single pinned cursor/plugins source commit. The
+# importer refuses to run against any other checkout: imports from an
+# unpinned source would silently break upstream-sources.json provenance.
+# To import newer upstream content, pin the new commit here, regenerate
+# upstream-sources.json (scripts/build_upstream_sources.py), and re-import.
+SOURCE_REPOSITORY = "cursor/plugins"
+SOURCE_COMMIT = "12d587dfb20741cafc376c42c696c5f6e2a64487"
+
 PSTACK = "pstack/skills"
 TEAM_KIT = "cursor-team-kit/skills"
 
@@ -167,6 +175,49 @@ def import_skill(name: str, src_rel: str, source_root: Path) -> dict:
     }
 
 
+def verify_source_checkout(source_root: Path) -> None:
+    """Hard-fail unless the checkout is the pinned cursor/plugins commit."""
+    if not (source_root / PSTACK).is_dir():
+        raise SystemExit(f"not a cursor/plugins checkout: {source_root}")
+
+    ok, actual = run_git(source_root, ["rev-parse", "HEAD"])
+    if not ok or not actual:
+        raise SystemExit(f"cannot resolve HEAD of source checkout: {source_root}")
+    if actual != SOURCE_COMMIT:
+        raise SystemExit(
+            "ERROR:\n"
+            f"  Cursor source checkout is at {actual}\n"
+            f"  catalog pin is          {SOURCE_COMMIT}\n"
+            "  refusing to import unpinned source."
+        )
+
+    ok, origin_url = run_git(source_root, ["remote", "get-url", "origin"])
+    if ok and origin_url:
+        normalized = origin_url.strip().rstrip("/").removesuffix(".git").lower()
+        if "github.com" not in normalized or not normalized.endswith("/cursor/plugins"):
+            raise SystemExit(
+                "ERROR:\n"
+                f"  source checkout origin is {origin_url}\n"
+                f"  expected the {SOURCE_REPOSITORY} repository\n"
+                "  refusing to import unpinned source."
+            )
+
+
+def run_git(cwd: Path, args: list[str]) -> tuple[bool, str]:
+    import subprocess
+
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(cwd)] + args,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False, ""
+    if proc.returncode != 0:
+        return False, ""
+    return True, proc.stdout.strip()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", required=True, help="path to cursor/plugins checkout")
@@ -174,8 +225,7 @@ def main() -> int:
     args = parser.parse_args()
 
     source_root = Path(args.source).resolve()
-    if not (source_root / PSTACK).is_dir():
-        raise SystemExit(f"not a cursor/plugins checkout: {source_root}")
+    verify_source_checkout(source_root)
 
     SKILLS_DIR.mkdir(parents=True, exist_ok=True)
     report = [import_skill(name, rel, source_root) for name, rel in COPY_SKILLS.items()]

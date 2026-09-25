@@ -89,7 +89,19 @@ def parse_skill_md(path: Path) -> tuple[dict, str]:
     return data, text[match.end():]
 
 
-def check_skill(name: str) -> None:
+def plugin_name() -> str:
+    """Read the plugin package name from plugin.json (already schema-validated)."""
+    try:
+        data = json.loads((REPO_ROOT / "plugin.json").read_text())
+        name = data.get("name")
+        if isinstance(name, str) and name:
+            return name
+    except (json.JSONDecodeError, OSError):
+        pass
+    return "unknown-plugin"
+
+
+def check_skill(name: str, plugin: str = "ega-skills") -> None:
     skill_dir = SKILLS_DIR / name
     skill_md = skill_dir / "SKILL.md"
 
@@ -106,6 +118,13 @@ def check_skill(name: str) -> None:
         fail(f"{name}: frontmatter name '{frontmatter.get('name')}' != directory")
     if not NAME_RE.match(name) or len(name) > 64:
         fail(f"{name}: invalid skill name")
+
+    combined = f"{plugin}:{name}"
+    if len(combined) > 64:
+        fail(
+            f"skill identity too long: {combined}\n"
+            f"  skill={name} plugin={plugin} length={len(combined)} max=64"
+        )
 
     description = frontmatter.get("description")
     if not isinstance(description, str) or not description.strip():
@@ -219,6 +238,7 @@ def check_provenance() -> None:
 
 
 def main() -> int:
+    plugin = plugin_name()
     check_plugin()
     if not SKILLS_DIR.is_dir():
         fail("skills/: missing")
@@ -231,8 +251,15 @@ def main() -> int:
             if not (SKILLS_DIR / name / "SKILL.md").is_file():
                 fail(f"{name}: no SKILL.md")
                 continue
-            check_skill(name)
+            check_skill(name, plugin)
     check_provenance()
+
+    identities = [f"{plugin}:{name}" for name in skill_names]
+    if identities:
+        longest = max(identities, key=len)
+        print(f"PLUGIN: {plugin} (longest identity: {longest} [{len(longest)}/64])")
+    else:
+        print(f"PLUGIN: {plugin}")
 
     for message in warnings:
         print(f"[WARN] {message}")

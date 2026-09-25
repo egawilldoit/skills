@@ -1,0 +1,5 @@
+# Exact CI dependency pins for catalog validation.
+# Installed by .github/workflows/catalog-validation.yml. No floating
+# constraints: every entry is ==, so CI runs are reproducible.
+PyYAML==6.0.3
+jsonschema==4.26.0
