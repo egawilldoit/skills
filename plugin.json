@@ -1,0 +1,44 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ega-skills",
+  "version": "0.1.0",
+  "description": "Reusable engineering, review, verification, delivery, and software-operations workflows for ChatGPT and Codex agents.",
+  "author": {
+    "name": "egawilldoit",
+    "url": "https://github.com/egawilldoit"
+  },
+  "homepage": "https://github.com/egawilldoit/skills",
+  "repository": "https://github.com/egawilldoit/skills",
+  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "codex",
+    "chatgpt",
+    "engineering-workflow",
+    "code-review",
+    "verification",
+    "release-certification",
+    "software-operations"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "egawilldoit skills",
+        "shortDescription": "Engineering delivery skills",
+        "longDescription": "A portable agent skill catalog covering codebase understanding, architecture, review, verification, CI, stacked pull requests, release certification, and software operations. Skills are self-contained folders with progressive disclosure into references and deterministic scripts.",
+        "developerName": "egawilldoit",
+        "category": "Developer Tools",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "websiteURL": "https://github.com/egawilldoit/skills",
+        "defaultPrompt": [
+          "Route this engineering task with $deliver-software.",
+          "Understand how this subsystem works with $understand-codebase.",
+          "Certify this release with $certify-release."
+        ]
+      }
+    }
+  }
+}

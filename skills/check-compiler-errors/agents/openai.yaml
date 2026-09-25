@@ -1,0 +1,4 @@
+interface:
+  display_name: "Check Compiler Errors"
+  short_description: "Surface and clear compiler and type errors"
+  default_prompt: "Use $check-compiler-errors before this branch goes to review."
