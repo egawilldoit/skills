@@ -205,6 +205,28 @@ class TestTreeState(unittest.TestCase):
         self.assertFalse(facts["tree"]["clean"])
         self.assertGreaterEqual(facts["tree"]["untracked"], 1)
 
+    def test_status_failure_reports_unknown_and_not_ready(self):
+        tracked = self.work / "a.txt"
+        tracked.write_text("modified before index corruption\n")
+        index = self.work / ".git" / "index"
+        index.write_bytes(b"corrupt index")
+        status = subprocess.run(["git", "status", "--porcelain"], cwd=self.work,
+                                capture_output=True, text=True)
+        self.assertNotEqual(status.returncode, 0, status.stdout + status.stderr)
+        proc = subprocess.run(
+            [sys.executable, str(REPO_SCRIPTS / "preflight.py"), "--repo", str(self.work),
+             "--default-branch", "main", "--json"],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        facts = json.loads(proc.stdout)
+        self.assertIsNone(facts["tree"]["clean"])
+        self.assertEqual(facts["tree"]["state"], "UNKNOWN")
+        self.assertTrue(facts["tree"]["error"])
+        self.assertIsNone(facts["verdict_inputs"]["tree_clean"])
+        self.assertEqual(facts["verdict_inputs"]["tree_status"], "UNKNOWN")
+        self.assertNotEqual("READY", facts["verdict_inputs"].get("verdict"))
+
 
 if __name__ == "__main__":
     unittest.main()

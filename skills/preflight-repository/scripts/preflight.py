@@ -34,6 +34,12 @@ import sys
 
 def run(cmd, cwd=None):
     """Run a command, return (ok, stdout_stripped)."""
+    code, output, _error = run_detailed(cmd, cwd=cwd)
+    return code == 0, output if code == 0 else ""
+
+
+def run_detailed(cmd, cwd=None):
+    """Run a command while preserving exit status, stdout, and stderr."""
     try:
         proc = subprocess.run(
             cmd,
@@ -43,11 +49,9 @@ def run(cmd, cwd=None):
             text=True,
             timeout=30,
         )
-    except (OSError, subprocess.SubprocessError):
-        return False, ""
-    if proc.returncode != 0:
-        return False, ""
-    return True, proc.stdout.strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        return None, "", str(exc)
+    return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
 
 
 def git(args, cwd=None):
@@ -202,8 +206,12 @@ def main():
                 break
 
     # dirty state
-    ok, porcelain = git(["status", "--porcelain"], cwd=root)
-    changed = [l for l in porcelain.splitlines() if l.strip()] if ok else []
+    status_code, porcelain, status_error = run_detailed(
+        ["git", "status", "--porcelain", "--untracked-files=all"], cwd=root)
+    status_ok = status_code == 0
+    changed = [l for l in porcelain.splitlines() if l.strip()] if status_ok else []
+    tree_clean = (len(changed) == 0) if status_ok else None
+    tree_state = ("CLEAN" if tree_clean else "DIRTY") if status_ok else "UNKNOWN"
     staged = sum(1 for l in changed if l[:2].strip() and l[0] not in " ?")
     unstaged = sum(1 for l in changed if len(l) > 1 and l[1] not in " ?" and l[0] != "?")
     untracked = sum(1 for l in changed if l.startswith("??"))
@@ -327,7 +335,9 @@ def main():
             "superproject_working_tree": superproject,
         },
         "tree": {
-            "clean": len(changed) == 0,
+            "clean": tree_clean,
+            "state": tree_state,
+            "error": None if status_ok else (status_error or "git status failed"),
             "changed_count": len(changed),
             "staged": staged,
             "unstaged": unstaged,
@@ -354,7 +364,8 @@ def main():
             "identity_proven": bool(identity.get("owner") and identity.get("name")),
             "root_proven": bool(root),
             "head_proven": bool(head_sha),
-            "tree_clean": len(changed) == 0,
+            "tree_clean": tree_clean,
+            "tree_status": tree_state,
             "default_branch_proven": default_branch_source in ("explicit_override", "remote_head_symref"),
             "default_branch_source": default_branch_source,
             "detached_head": detached,
@@ -376,7 +387,10 @@ def main():
         print("HEAD:       %s" % (head_sha or "unknown"))
         print("DEFAULT:    %s (source: %s)" % (default_branch or "unknown", default_branch_source))
         print("MERGE BASE: %s" % (merge_base or "unknown"))
-        print("TREE:       %s" % ("clean" if len(changed) == 0 else "dirty(%d)" % len(changed)))
+        tree_summary = ("clean" if tree_state == "CLEAN" else
+                        "dirty(%d)" % len(changed) if tree_state == "DIRTY" else
+                        "unknown/error (%s)" % (status_error or "git status failed"))
+        print("TREE:       %s" % tree_summary)
         print("SYNC:       ahead=%s behind=%s tracking=%s remote=%s (live=%s)" % (
             ahead, behind, tracking_parity, remote_parity, remote_reachable))
         print("PR:         %s" % (("PR #%s base=%s head=%s" % (

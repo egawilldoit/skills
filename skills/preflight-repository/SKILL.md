@@ -32,7 +32,7 @@ default branch           from the remote (ls-remote symref) when reachable; the 
 current branch           or detached HEAD
 HEAD SHA                 full commit id
 merge base               HEAD against the default branch and against the PR base
-dirty state              staged, unstaged, untracked
+dirty state              clean, dirty, or unknown/error; when git status fails, clean is null and the verdict is INSUFFICIENT_EVIDENCE
 tracking parity          HEAD versus the local @{upstream} tracking ref
 remote parity            HEAD versus the live remote branch SHA (read-only ls-remote)
 worktree                 is THIS checkout the main worktree, a linked worktree, or a submodule
@@ -62,7 +62,7 @@ READY               identity proven, tree clean, base known, no blocking drift
 READY_WITH_NOTES    work can proceed; named notes affect hygiene, not correctness
 BLOCKED             a precondition is false: dirty tree, diverged base, failed checks
 WRONG_REPOSITORY    identity or root does not match the intended target
-INSUFFICIENT_EVIDENCE  a required fact could not be proven
+INSUFFICIENT_EVIDENCE  a required fact could not be proven, including repository tree state when git status fails
 ```
 
 `WRONG_REPOSITORY` and `BLOCKED` are hard stops for mutation. Report them instead of acting. `READY_WITH_NOTES` lists each note and its impact.
@@ -99,7 +99,7 @@ REPOSITORY: <host/owner/name>
 ROOT: <path>
 BRANCH: <current> -> HEAD <sha>
 BASE: <default branch> merge-base <sha>
-TREE: clean | dirty(<n>)
+TREE: clean | dirty(<n>) | unknown/error
 SYNC: ahead <n>, behind <n>, tracking parity <yes|no|unknown>, remote parity <yes|no|unknown|not_applicable>
 PR: <number or none>, base <branch>, head <sha>
 CI: <state or not relevant>
