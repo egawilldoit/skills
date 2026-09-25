@@ -50,7 +50,8 @@
       "source_path": "cursor-team-kit/skills/check-compiler-errors",
       "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
       "license": "MIT",
-      "mode": "copied"
+      "mode": "adapted",
+      "source_skill": "check-compiler-errors"
     },
     {
       "skill": "compare-designs",
@@ -421,7 +422,8 @@
       "source_path": "cursor-team-kit/skills/run-smoke-tests",
       "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
       "license": "MIT",
-      "mode": "copied"
+      "mode": "adapted",
+      "source_skill": "run-smoke-tests"
     },
     {
       "skill": "tdd",

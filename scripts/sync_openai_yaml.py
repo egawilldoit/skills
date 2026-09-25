@@ -190,13 +190,13 @@ METADATA: dict[str, tuple[str, str, str]] = {
     ),
     "run-smoke-tests": (
         "Run Smoke Tests",
-        "Run the project's existing smoke suite",
-        "Use $run-smoke-tests to smoke-test this change.",
+        "Run smoke tests and report real failures",
+        "Use $run-smoke-tests to run the existing smoke suite and report any failures.",
     ),
     "check-compiler-errors": (
         "Check Compiler Errors",
-        "Surface and clear compiler and type errors",
-        "Use $check-compiler-errors before this branch goes to review.",
+        "Inspect compiler and type-check failures",
+        "Use $check-compiler-errors to inspect compiler and type-check failures on this branch.",
     ),
     "get-pr-comments": (
         "Get PR Comments",

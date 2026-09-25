@@ -242,7 +242,7 @@ validation dependencies are exact-pinned in `requirements-ci.txt`.
 | Skill | Purpose | Origin | Ownership |
 | --- | --- | --- | --- |
 | [`blast-radius`](skills/blast-radius/) | Find what a change breaks elsewhere before it ships | `pstack/skills/blast-radius` | UPSTREAM |
-| [`check-compiler-errors`](skills/check-compiler-errors/) | Surface and clear compiler and type errors | `cursor-team-kit/skills/check-compiler-errors` | UPSTREAM |
+| [`check-compiler-errors`](skills/check-compiler-errors/) | Inspect compiler and type-check failures; repair only when authorized | `cursor-team-kit/skills/check-compiler-errors` | ADAPTED |
 | [`fix-merge-conflicts`](skills/fix-merge-conflicts/) | Resolve conflicts while preserving intent | `cursor-team-kit/skills/fix-merge-conflicts` | UPSTREAM |
 | [`get-pr-comments`](skills/get-pr-comments/) | Collect and triage review comments on a PR | `cursor-team-kit/skills/get-pr-comments` | UPSTREAM |
 | [`principle-attack-the-premise`](skills/principle-attack-the-premise/) | Challenge the assumption the task is built on | `pstack/skills/principle-attack-the-premise` | UPSTREAM |
@@ -267,7 +267,7 @@ validation dependencies are exact-pinned in `requirements-ci.txt`.
 | [`principle-subtract-before-you-add`](skills/principle-subtract-before-you-add/) | Remove dead weight before building on the base | `pstack/skills/principle-subtract-before-you-add` | UPSTREAM |
 | [`principle-test-behavior-not-implementation`](skills/principle-test-behavior-not-implementation/) | Assert observable behavior, not internal structure | `pstack/skills/principle-test-behavior-not-implementation` | UPSTREAM |
 | [`principle-type-system-discipline`](skills/principle-type-system-discipline/) | Make illegal states unrepresentable in the types | `pstack/skills/principle-type-system-discipline` | UPSTREAM |
-| [`run-smoke-tests`](skills/run-smoke-tests/) | Run the project's existing smoke suite | `cursor-team-kit/skills/run-smoke-tests` | UPSTREAM |
+| [`run-smoke-tests`](skills/run-smoke-tests/) | Run smoke tests and report failures; repair only when authorized | `cursor-team-kit/skills/run-smoke-tests` | ADAPTED |
 | [`tdd`](skills/tdd/) | Drive changes from a failing test to a proven fix | `pstack/skills/tdd` | UPSTREAM |
 | [`technical-writing`](skills/technical-writing/) | Write and review docs, RFCs, and PR descriptions | `pstack/skills/technical-writing` | UPSTREAM |
 | [`typescript-best-practices`](skills/typescript-best-practices/) | Apply TypeScript typing and design conventions | `pstack/skills/typescript-best-practices` | UPSTREAM |
@@ -308,4 +308,4 @@ validation dependencies are exact-pinned in `requirements-ci.txt`.
 | [`reconcile-project-truth`](skills/reconcile-project-truth/) | Resolve contradictions across project sources | `-` | ORIGINAL |
 | [`trace-artifact-provenance`](skills/trace-artifact-provenance/) | Trace source to artifact to release lineage | `-` | ORIGINAL |
 
-Catalog counts: 34 copied, 22 adapted, 10 original, 66 total.
+Catalog counts: 32 copied, 24 adapted, 10 original, 66 total.

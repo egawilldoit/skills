@@ -94,8 +94,6 @@ COPY_SKILLS = {
     "principle-type-system-discipline": f"{PSTACK}/principle-type-system-discipline",
     # cursor-team-kit
     "verify-this": f"{TEAM_KIT}/verify-this",
-    "run-smoke-tests": f"{TEAM_KIT}/run-smoke-tests",
-    "check-compiler-errors": f"{TEAM_KIT}/check-compiler-errors",
     "get-pr-comments": f"{TEAM_KIT}/get-pr-comments",
     "fix-merge-conflicts": f"{TEAM_KIT}/fix-merge-conflicts",
     "what-did-i-get-done": f"{TEAM_KIT}/what-did-i-get-done",

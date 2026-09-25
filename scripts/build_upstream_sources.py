@@ -55,8 +55,6 @@ COPIED: dict[str, str] = {
     "verify-this": f"{TEAM_KIT}/verify-this",
     "what-did-i-get-done": f"{TEAM_KIT}/what-did-i-get-done",
     "weekly-review": f"{TEAM_KIT}/weekly-review",
-    "run-smoke-tests": f"{TEAM_KIT}/run-smoke-tests",
-    "check-compiler-errors": f"{TEAM_KIT}/check-compiler-errors",
     "get-pr-comments": f"{TEAM_KIT}/get-pr-comments",
     "fix-merge-conflicts": f"{TEAM_KIT}/fix-merge-conflicts",
 }
@@ -92,6 +90,9 @@ ADAPTED: dict[str, list[tuple[str, str]]] = {
     # dynamic base resolution.
     "new-branch-and-pr": [("new-branch-and-pr", f"{TEAM_KIT}/new-branch-and-pr")],
     "deslop": [("deslop", f"{TEAM_KIT}/deslop")],
+    # Diagnostic skills adapted so inspection stays read-only unless edits are authorized.
+    "check-compiler-errors": [("check-compiler-errors", f"{TEAM_KIT}/check-compiler-errors")],
+    "run-smoke-tests": [("run-smoke-tests", f"{TEAM_KIT}/run-smoke-tests")],
 }
 
 ORIGINAL = [

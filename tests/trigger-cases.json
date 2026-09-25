@@ -77,6 +77,17 @@
     "edge": "code is merged and the deploy succeeded, but no real user has gone through checkout yet"
   },
   {
+    "skill": "check-compiler-errors",
+    "direct": "Use $check-compiler-errors to run the compiler and report type errors without editing code.",
+    "indirect": "Before review, tell me which files fail type-check and why; do not fix anything yet.",
+    "incomplete": "what compiler errors are on this branch?",
+    "negative": "the CI build is red; inspect the failing job logs and apply the smallest repair",
+    "negative_expected": "fix-ci",
+    "collision": "run the existing end-to-end smoke suite and report failures without changing code",
+    "collision_expected": "run-smoke-tests",
+    "edge": "type-check fails in many files, but I only want diagnosis and no edits"
+  },
+  {
     "skill": "compare-designs",
     "direct": "Use $compare-designs to generate three candidate architectures for the sync layer and pick a base to graft from.",
     "indirect": "there are a few reasonable ways to model this and I do not want to lock in the first one; throw it in the arena",
@@ -295,6 +306,17 @@
     "collision": "independently challenge this diff for correctness and security before it ships",
     "collision_expected": "adversarial-review",
     "edge": "the diff is large; split the review across parallel subagents, then open the pull request"
+  },
+  {
+    "skill": "run-smoke-tests",
+    "direct": "Use $run-smoke-tests to run the existing smoke suite and report failures without editing code.",
+    "indirect": "Before merge, exercise the project's existing end-to-end smoke tests and show me the traces for failures.",
+    "incomplete": "run the smoke tests",
+    "negative": "run the compiler and type-check commands and summarize the failures by file",
+    "negative_expected": "check-compiler-errors",
+    "collision": "verify the checkout flow in a real browser with screenshots and console evidence, not just the existing suite",
+    "collision_expected": "verify-ui",
+    "edge": "the smoke suite is red; diagnose the failure but do not change product or test code"
   },
   {
     "skill": "trace-artifact-provenance",
