@@ -24,8 +24,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
+
+FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
 def git(args):
@@ -41,9 +44,16 @@ def git(args):
 
 
 def resolve_sha(value):
+    """Resolve a SHA without requiring the object to exist locally.
+
+    A full 40-character hex SHA is an external identifier (e.g. the PR head
+    SHA on a shallow merge-result checkout) and is accepted as-is: the
+    identity check is an exact string comparison, not an object lookup.
+    Abbreviated SHAs are expanded only when the object is present locally.
+    """
     if not value:
         return None
-    if len(value) == 40 and git(["cat-file", "-e", value + "^{commit}"]) is not None:
+    if FULL_SHA_RE.match(value):
         return value.lower()
     full = git(["rev-parse", "--verify", "-q", value + "^{commit}"])
     return full.lower() if full else None
