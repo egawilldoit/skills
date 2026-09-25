@@ -6,8 +6,14 @@ the objects are available locally. The model interprets ambiguity and decides
 how to act.
 
 Usage:
-    python3 discover_stack.py [--repo owner/name] [--default-branch main]
+    python3 discover_stack.py [--repo owner/name] [--default-branch NAME]
     python3 discover_stack.py --json
+
+The default branch is not assumed. Without --default-branch the script
+resolves the repository's actual default branch from GitHub (via
+`gh repo view --json defaultBranchRef`) or the Git remote HEAD symref. If it
+cannot be resolved, the script exits with an insufficient-evidence error
+instead of inventing one; use --default-branch to pass an explicit override.
 
 Exit codes:
     0  stack discovered (may be a single PR or none)
@@ -48,14 +54,56 @@ def is_ancestor(older, newer, cwd):
     return "unknown"
 
 
+def resolve_default_branch(args):
+    """Resolve the repository default branch with a recorded source.
+
+    Returns (default_branch, default_branch_source). Sources, best first:
+        explicit_override   -- caller passed --default-branch
+        github_default_ref  -- gh repo view defaultBranchRef
+        git_remote_head     -- `git ls-remote --symref origin HEAD`
+    """
+    if args.default_branch:
+        return args.default_branch, "explicit_override"
+
+    cmd = ["gh", "repo", "view", "--json", "defaultBranchRef"]
+    if args.repo:
+        cmd += ["--repo", args.repo]
+    ok, out = run(cmd, cwd=args.cwd)
+    if ok and out:
+        try:
+            info = json.loads(out) or {}
+            ref = (info.get("defaultBranchRef") or {}).get("name")
+            if ref:
+                return ref, "github_default_ref"
+        except ValueError:
+            pass
+
+    ok, out = run(["git", "ls-remote", "--symref", "origin", "HEAD"], cwd=args.cwd)
+    if ok and out:
+        for line in out.splitlines():
+            symref, _, sha = line.partition("\t")
+            if symref.startswith("ref: refs/heads/"):
+                return symref[len("ref: refs/heads/"):], "git_remote_head"
+
+    return None, "unknown"
+
+
 def main():
     parser = argparse.ArgumentParser(description="Discover a stacked-PR chain (read-only).")
     parser.add_argument("--repo", default=None, help="owner/name for gh")
-    parser.add_argument("--default-branch", default="main")
+    parser.add_argument("--default-branch", default=None,
+                        help="explicit default-branch override; resolved from "
+                             "GitHub/remote when omitted")
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--cwd", default=".")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
+
+    default_branch, default_branch_source = resolve_default_branch(args)
+    if not default_branch:
+        print("ERROR: default branch could not be resolved from GitHub or the "
+              "Git remote; pass --default-branch explicitly", file=sys.stderr)
+        return 2
 
     if shutil.which("gh") is None:
         print("gh not found", file=sys.stderr)
@@ -78,7 +126,7 @@ def main():
         by_base.setdefault(pr.get("baseRefName"), []).append(pr)
 
     # Bottoms are PRs targeting the default branch.
-    bottoms = [pr for pr in prs if pr.get("baseRefName") == args.default_branch]
+    bottoms = [pr for pr in prs if pr.get("baseRefName") == default_branch]
 
     chains = []
     for bottom in bottoms:
@@ -103,7 +151,12 @@ def main():
     reachable = {pr.get("number") for chain in chains for pr in chain}
     orphans = [pr.get("number") for pr in prs if pr.get("number") not in reachable]
 
-    report = {"default_branch": args.default_branch, "chains": [], "orphans": orphans}
+    report = {
+        "default_branch": default_branch,
+        "default_branch_source": default_branch_source,
+        "chains": [],
+        "orphans": orphans,
+    }
     for chain in chains:
         entries = []
         for index, pr in enumerate(chain):
@@ -129,7 +182,7 @@ def main():
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
-        print("DEFAULT BRANCH: %s" % args.default_branch)
+        print("DEFAULT BRANCH: %s (source: %s)" % (default_branch, default_branch_source))
         if not report["chains"]:
             print("STACK: none (no open PR targets the default branch)")
         for index, chain in enumerate(report["chains"], 1):

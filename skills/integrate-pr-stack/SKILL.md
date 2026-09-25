@@ -39,7 +39,7 @@ Each PR's base is the previous PR's head. Ancestry must hold: the base SHA is an
 
 ## Workflow
 
-1. Discover the stack. Find the open PRs whose bases chain to one another. Run `scripts/discover_stack.py`.
+1. Discover the stack. Find the open PRs whose bases chain to one another. Run `scripts/discover_stack.py`. The default branch is resolved from the repository's actual default (GitHub or the remote HEAD symref), not assumed to be `main`; pass `--default-branch` only as an explicit override, and expect a clear error if it cannot be resolved.
 2. Verify ancestry for every link. If ancestry fails, stop and reconcile before any merge.
 3. Map each PR's base and head, the SHA each check ran on, and the current diff.
 4. Detect drift: a base moved, a head moved, or a diff changed since review.
