@@ -88,6 +88,22 @@ class TestVerdicts(unittest.TestCase):
         self.assertEqual(out["verdict"], "INCOMPLETE")
         self.assertIn("failure", out["reason"])
 
+    def test_stale_associated_sha_cannot_certify_current_execution(self):
+        out = run_certify("--reviewed", HEAD, "--tested", HEAD,
+                          "--ci-associated-head", OLD, "--ci-executed-sha", HEAD,
+                          "--ci-conclusion", "success")
+        self.assertEqual(out["verdict"], "STALE_EVIDENCE")
+
+    def test_missing_ci_conclusion_cannot_certify(self):
+        out = run_certify("--reviewed", HEAD, "--tested", HEAD,
+                          "--ci-associated-head", HEAD, "--ci-executed-sha", HEAD)
+        self.assertEqual(out["verdict"], "INCOMPLETE")
+
+    def test_missing_associated_sha_cannot_certify(self):
+        out = run_certify("--reviewed", HEAD, "--tested", HEAD,
+                          "--ci-executed-sha", HEAD, "--ci-conclusion", "success")
+        self.assertEqual(out["verdict"], "INCOMPLETE")
+
     def test_mixed_stale_evidence(self):
         out = run_certify("--reviewed", OLD, "--tested", OLD, "--ci-associated-head", OLD,
                           "--ci-executed-sha", OLD, "--ci-conclusion", "success")

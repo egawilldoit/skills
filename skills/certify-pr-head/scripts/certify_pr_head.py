@@ -172,12 +172,25 @@ def classify_ci(ci_evidence, reference, cwd):
         return result
     result["executed"] = executed_full
 
-    if conclusion is not None and conclusion != "success":
+    if conclusion is None or (isinstance(conclusion, str) and not conclusion.strip()):
+        result["status"] = "missing"
+        result["executed_status"] = classify(executed_full, reference, cwd)[0]
+        result["detail"] = "CI conclusion is missing"
+        return result
+
+    if not isinstance(conclusion, str) or conclusion.strip().lower() != "success":
         result["status"] = "failed"
         result["executed_status"] = (
             "match" if executed_full == reference
             else classify(executed_full, reference, cwd)[0])
         result["detail"] = "CI conclusion is %r, not success" % conclusion
+        return result
+
+    if result["associated_status"] != "match":
+        result["status"] = ("stale" if result["associated_status"] == "stale"
+                            else "missing")
+        result["executed_status"] = classify(executed_full, reference, cwd)[0]
+        result["detail"] = "CI associated head does not match the reference head"
         return result
 
     if executed_full == reference:
@@ -309,7 +322,9 @@ def main():
         matches_old_head = any(v == "match" for v in provided.values())
         # All evidence must have matched the old head for this to be a clean move.
         all_match_old = all(
-            results[name]["sha"] == evidence_head_full
+            ((results[name]["associated_head_sha"] == evidence_head_full and
+              results[name]["executed_sha"] == evidence_head_full)
+             if name == "ci" else results[name]["sha"] == evidence_head_full)
             for name in provided
         )
         if all_match_old or matches_old_head:
