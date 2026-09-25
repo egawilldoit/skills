@@ -28,10 +28,13 @@ skills/
 ├── upstream-sources.json              machine-readable provenance registry
 ├── references/
 │   ├── operating-contract.md          shared vocabulary for owned skills
-│   └── agent-plugin-schema-1.0.0.json vendored canonical schema (offline validation)
+│   ├── agent-plugin-schema-1.0.0.json vendored canonical schema (offline validation)
+│   └── agent-plugin-schema-1.0.0.sha256 pinned digest of the vendored schema
 ├── scripts/                           catalog tooling (see below)
+├── requirements-ci.txt                exact-pinned CI dependency lock
 ├── tests/
-│   └── trigger-cases.json             routing test cases for owned skills
+│   ├── trigger-cases.json             routing test cases for owned skills
+│   └── test_*.py                      behavior tests for the deterministic helpers
 ├── .github/
 │   └── workflows/
 │       └── catalog-validation.yml     first-party CI
@@ -124,11 +127,17 @@ python3 scripts/validate_catalog.py
 # check agents/openai.yaml is current
 python3 scripts/sync_openai_yaml.py --check
 
+# check every skill-local operating-contract copy matches the canonical file
+python3 scripts/sync_operating_contract.py --check
+
 # review description overlap across at-risk clusters
 python3 scripts/routing_audit.py
 
 # check owned skills route their trigger cases to the intended skill
 python3 scripts/trigger_audit.py
+
+# run the deterministic helper test suite
+python3 -m unittest discover -s tests -p 'test_*.py'
 
 # regenerate agents/openai.yaml from the curated metadata table
 python3 scripts/sync_openai_yaml.py
@@ -136,44 +145,97 @@ python3 scripts/sync_openai_yaml.py
 # rebuild upstream-sources.json from the pinned source
 python3 scripts/build_upstream_sources.py
 
-# re-import copied skills from a cursor/plugins checkout
+# re-import copied skills from a pinned cursor/plugins checkout
 python3 scripts/import_cursor_skills.py --source /path/to/cursor-plugins
 ```
 
-Validation has three distinct layers:
+Validation has these layers:
 
 - `validate_plugin_manifest.py` validates `plugin.json` against the official
-  Agent Plugins 1.0.0 JSON Schema. The exact 1.0.0 schema is vendored at
-  `references/agent-plugin-schema-1.0.0.json` so validation is deterministic and
-  offline; the script refuses to run if the local copy diverges from the
-  canonical `https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`.
+  Agent Plugins 1.0.0 JSON Schema. The repository vendors the 1.0.0 schema at
+  `references/agent-plugin-schema-1.0.0.json` and pins its expected SHA-256
+  digest at `references/agent-plugin-schema-1.0.0.sha256`; offline validation
+  refuses a schema whose digest differs from the committed pin (this is local
+  integrity, not a live comparison against the canonical URL).
 - `validate_catalog.py` is the repository catalog gate. It calls the manifest
   validator, then checks skill structure, frontmatter, `agents/openai.yaml`,
   reference integrity, empty resource folders, placeholders, Cursor-specific
-  coupling, and provenance coverage.
+  coupling, provenance coverage, and the combined `plugin:skill` identity
+  length (every combined identity must stay at or under 64 characters).
 - The legacy OpenAI `openai/skills` `skill-creator` `quick_validate.py` is an
   optional historical cross-check of skill anatomy. It is not the current
   plugin-packaging validator and is not part of CI.
+
+The plugin package identifier is `ega-skills` (short enough that every
+combined `ega-skills:<skill>` identity fits the 64-character submission
+constraint); the human-facing display name stays "egawilldoit skills".
 
 `tests/trigger-cases.json` holds six representative requests per owned skill:
 direct, indirect, incomplete, a nearby request that must not fire, a boundary
 case against the closest sibling, and a hard edge case. `trigger_audit.py`
 checks the suite structurally and reports where wording drifts toward a
 sibling. Real routing is semantic, so the lexical layer is a signal, not a gate.
+`routing_audit.py` and `trigger_audit.py` are routing metadata lint and
+trigger wording regression checks; they are static signals, not proof that a
+model will semantically route every skill correctly.
+
+`tests/` also contains behavior tests for the deterministic proof helpers
+(`preflight.py`, `certify_pr_head.py`, `provenance_manifest.py`,
+`discover_stack.py`, the catalog and manifest validators, the Cursor source-pin
+import guard, the operating-contract sync, `assert_checkout_sha.py`, and
+`record-evidence/scripts/log.sh`). They use standard-library `unittest` and
+temporary git repositories; no unit test depends on live GitHub.
+
+## Source pin enforcement
+
+The catalog pins a single Cursor source commit
+(`12d587dfb20741cafc376c42c696c5f6e2a64487`). `import_cursor_skills.py` refuses
+to import from a checkout whose HEAD does not equal that pin, or whose origin
+is not `cursor/plugins`; a mismatch hard-fails. Updating the pin is a
+deliberate operation: change the pin, regenerate `upstream-sources.json`, and
+re-import together.
+
+## Shared operating contract
+
+`references/operating-contract.md` is the canonical copy. Skill-local copies
+exist so skills stay self-contained when packaged independently;
+`scripts/sync_operating_contract.py --check` fails on any drift between the
+canonical file and any skill-local copy, and CI enforces it.
 
 ## CI
 
-`.github/workflows/catalog-validation.yml` runs the full validation suite on
-every pull request and on pushes to `main`:
+`.github/workflows/catalog-validation.yml` produces two distinct validation
+guarantees for pull requests:
+
+```text
+validate-head    checks out the exact PR head (github.event.pull_request.head.sha),
+                 proves the executed SHA equals the PR head, and runs the full
+                 gate suite plus the deterministic helper tests
+validate-merge   validates the normal GitHub synthetic PR merge result and
+                 proves the executed SHA differs from the PR head, showing the
+                 proposed code also validates when combined with the current base
+validate-main    for pushes to main, validates the exact pushed SHA
+```
+
+Both PR jobs run the full suite:
 
 ```text
 scripts/validate_plugin_manifest.py
 scripts/validate_catalog.py
 scripts/sync_openai_yaml.py --check
+scripts/sync_operating_contract.py --check
 scripts/routing_audit.py
 scripts/trigger_audit.py
-python3 -m compileall -q scripts skills
+python3 -m unittest discover -s tests -p 'test_*.py' -v
+git diff --check
 ```
+
+Exact-head validation and merge-result validation are separate evidence
+classes and are never conflated: a green `validate-merge` does not certify the
+PR head itself; only `validate-head` does. Actions are pinned to immutable
+full commit SHAs (`actions/checkout@11d5960a326750d5838078e36cf38b85af677262`,
+`actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065`), and
+validation dependencies are exact-pinned in `requirements-ci.txt`.
 
 ## Catalog
 
