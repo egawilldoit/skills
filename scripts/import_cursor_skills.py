@@ -23,6 +23,7 @@ import argparse
 import json
 import re
 import shutil
+from urllib.parse import urlsplit
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -192,15 +193,49 @@ def verify_source_checkout(source_root: Path) -> None:
         )
 
     ok, origin_url = run_git(source_root, ["remote", "get-url", "origin"])
-    if ok and origin_url:
-        normalized = origin_url.strip().rstrip("/").removesuffix(".git").lower()
-        if "github.com" not in normalized or not normalized.endswith("/cursor/plugins"):
-            raise SystemExit(
-                "ERROR:\n"
-                f"  source checkout origin is {origin_url}\n"
-                f"  expected the {SOURCE_REPOSITORY} repository\n"
-                "  refusing to import unpinned source."
-            )
+    if not ok or not origin_url or canonical_repository(origin_url) != SOURCE_REPOSITORY:
+        raise SystemExit(
+            "ERROR:\n"
+            f"  source checkout origin is {origin_url or 'missing or unreadable'}\n"
+            f"  expected github.com/{SOURCE_REPOSITORY}\n"
+            "  refusing to import unpinned source."
+        )
+
+    ok, status = run_git(source_root, ["status", "--porcelain", "--untracked-files=all"])
+    if not ok:
+        raise SystemExit(
+            "ERROR:\n"
+            "  source checkout status could not be established\n"
+            f"  working-tree content cannot be attributed to pinned commit {SOURCE_COMMIT}."
+        )
+    if status:
+        has_untracked = any(line.startswith("??") for line in status.splitlines())
+        detail = "untracked files" if has_untracked else "tracked modifications"
+        raise SystemExit(
+            "ERROR:\n"
+            f"  source checkout contains {detail}; working-tree content cannot be attributed "
+            f"to pinned commit {SOURCE_COMMIT}."
+        )
+
+
+def canonical_repository(url: str) -> str | None:
+    """Return owner/name for supported HTTPS, SSH, and SCP-style Git URLs."""
+    raw = url.strip()
+    scp = re.fullmatch(r"(?:[^@/:]+@)?([^:/]+):(.+)", raw)
+    if scp and "://" not in raw:
+        host, path = scp.groups()
+    else:
+        parsed = urlsplit(raw)
+        host, path = parsed.hostname, parsed.path
+    if not host or host.lower() != "github.com":
+        return None
+    path = path.strip("/")
+    if path.lower().endswith(".git"):
+        path = path[:-4]
+    parts = path.split("/")
+    if len(parts) != 2 or not all(parts):
+        return None
+    return "/".join(parts).lower()
 
 
 def run_git(cwd: Path, args: list[str]) -> tuple[bool, str]:

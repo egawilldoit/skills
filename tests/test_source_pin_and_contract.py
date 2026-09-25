@@ -25,7 +25,7 @@ def sh(cmd, cwd=None):
     return proc.stdout.strip()
 
 
-def make_checkout(base, origin_url=None, pinned_head=False):
+def make_checkout(base, origin_url="https://github.com/cursor/plugins.git", pinned_head=False):
     """A git checkout whose pstack layout matches the importer's expectations.
 
     pinned_head: replace HEAD with a fabricated commit; the caller should
@@ -40,6 +40,7 @@ def make_checkout(base, origin_url=None, pinned_head=False):
     (path / "pstack").mkdir()
     (path / "pstack" / "skills").mkdir()
     (path / "pstack" / "skills" / "some-skill").mkdir()
+    (path / "pstack" / "skills" / "some-skill" / "SKILL.md").write_text("---\nname: some-skill\ndescription: test\n---\n")
     sh("echo hi > hi.txt && git add -A && git commit -qm init", cwd=path)
     if pinned_head:
         tree = sh("git rev-parse HEAD^{tree}", cwd=path)
@@ -66,6 +67,23 @@ class TestSourcePinGuard(unittest.TestCase):
         with fabricate_pin(checkout):
             import_cursor_skills.verify_source_checkout(checkout)  # no SystemExit
 
+    def test_supported_cursor_remote_forms_pass(self):
+        for url in ("https://github.com/cursor/plugins.git",
+                    "git@github.com:cursor/plugins.git",
+                    "ssh://git@github.com/cursor/plugins.git"):
+            with self.subTest(url=url):
+                checkout = make_checkout(self.tmp / url.replace(":", "_").replace("/", "_"),
+                                         origin_url=url, pinned_head=True)
+                with fabricate_pin(checkout):
+                    import_cursor_skills.verify_source_checkout(checkout)
+
+    def test_missing_origin_fails(self):
+        checkout = make_checkout(self.tmp, origin_url=None, pinned_head=True)
+        with fabricate_pin(checkout):
+            with self.assertRaises(SystemExit) as ctx:
+                import_cursor_skills.verify_source_checkout(checkout)
+        self.assertIn("origin", str(ctx.exception).lower())
+
     def test_unpinned_checkout_hard_fails(self):
         checkout = make_checkout(self.tmp)
         with self.assertRaises(SystemExit) as ctx:
@@ -89,6 +107,31 @@ class TestSourcePinGuard(unittest.TestCase):
             with self.assertRaises(SystemExit) as ctx:
                 import_cursor_skills.verify_source_checkout(checkout)
         self.assertIn("origin", str(ctx.exception))
+
+    def test_tracked_working_tree_modification_fails(self):
+        checkout = make_checkout(self.tmp, pinned_head=True)
+        with fabricate_pin(checkout):
+            (checkout / "pstack/skills/some-skill/SKILL.md").write_text("dirty\n")
+            with self.assertRaises(SystemExit) as ctx:
+                import_cursor_skills.verify_source_checkout(checkout)
+        self.assertIn("tracked modifications", str(ctx.exception))
+
+    def test_staged_tracked_modification_fails(self):
+        checkout = make_checkout(self.tmp, pinned_head=True)
+        with fabricate_pin(checkout):
+            (checkout / "pstack/skills/some-skill/SKILL.md").write_text("staged dirty\n")
+            sh("git add pstack/skills/some-skill/SKILL.md", cwd=checkout)
+            with self.assertRaises(SystemExit) as ctx:
+                import_cursor_skills.verify_source_checkout(checkout)
+        self.assertIn("tracked modifications", str(ctx.exception))
+
+    def test_untracked_file_fails(self):
+        checkout = make_checkout(self.tmp, pinned_head=True)
+        with fabricate_pin(checkout):
+            (checkout / "untracked.txt").write_text("untracked\n")
+            with self.assertRaises(SystemExit) as ctx:
+                import_cursor_skills.verify_source_checkout(checkout)
+        self.assertIn("untracked files", str(ctx.exception))
 
     def test_not_a_checkout_fails(self):
         with self.assertRaises(SystemExit):
