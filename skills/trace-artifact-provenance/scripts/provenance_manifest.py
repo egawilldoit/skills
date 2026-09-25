@@ -44,6 +44,7 @@ import datetime
 import hashlib
 import json
 import os
+import struct
 import subprocess
 import sys
 
@@ -73,14 +74,13 @@ def file_digest(path, algorithm):
 
 
 def tree_digest(root, algorithm):
-    """Deterministic digest over a directory tree.
+    """Hash sorted file and symlink entries with explicit TREE-V2 framing.
 
-    Sorted relative paths, then per entry: path bytes, entry type, then
-    content bytes (files) or target bytes (symlinks). Symlinks are included
-    as `symlink` entries with their target; they are never followed. Trees
-    that differ only by symlink target therefore hash differently.
+    Empty directories are intentionally excluded. Symlinks are hashed by
+    their target bytes and never followed.
     """
     hasher = hashlib.new(algorithm)
+    hasher.update(b"EGA-TREE-V2")
     entries = []
     for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
         dirnames.sort()
@@ -96,20 +96,23 @@ def tree_digest(root, algorithm):
     entries.sort(key=lambda item: item[0].encode("utf-8"))
     file_count = 0
     for rel, kind, full in entries:
-        hasher.update(rel.encode("utf-8"))
-        hasher.update(b"\0")
-        hasher.update(kind.encode("utf-8"))
-        hasher.update(b"\0")
+        path_bytes = rel.encode("utf-8")
+        hasher.update(b"L" if kind == "symlink" else b"F")
+        hasher.update(struct.pack(">Q", len(path_bytes)))
+        hasher.update(path_bytes)
         if kind == "symlink":
-            target = os.readlink(full)
-            hasher.update(target.encode("utf-8"))
-            hasher.update(b"\0")
+            target = os.fsencode(os.readlink(full))
+            hasher.update(struct.pack(">Q", len(target)))
+            hasher.update(target)
         else:
             file_count += 1
+            size = os.path.getsize(full)
+            hasher.update(struct.pack(">Q", size))
+            content_hasher = hashlib.new(algorithm)
             with open(full, "rb") as handle:
                 for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                    hasher.update(chunk)
-            hasher.update(b"\0")
+                    content_hasher.update(chunk)
+            hasher.update(content_hasher.digest())
     return hasher.hexdigest(), file_count, len(entries)
 
 
@@ -122,12 +125,13 @@ def describe_artifact(path, algorithm):
                 full = os.path.join(dirpath, name)
                 if not os.path.islink(full):
                     size += os.path.getsize(full)
-        return {"kind_path": "directory", "digest": digest, "size_bytes": size,
+        return {"kind_path": "directory", "digest": digest,
+                "digest_algorithm": "tree-%s-v2" % algorithm, "size_bytes": size,
                 "file_count": file_count, "entry_count": entry_count}
     if not os.path.exists(path):
         raise FileNotFoundError(path)
     digest = file_digest(path, algorithm)
-    return {"kind_path": "file", "digest": digest,
+    return {"kind_path": "file", "digest": digest, "digest_algorithm": algorithm,
             "size_bytes": os.path.getsize(path), "file_count": 1,
             "entry_count": 1}
 
@@ -235,7 +239,8 @@ def build_manifest(args):
             "path": os.path.abspath(args.artifact),
             "size_bytes": info["size_bytes"],
             "digest": info["digest"],
-            "digest_algorithm": args.digest_algorithm,
+            "digest_algorithm": info["digest_algorithm"],
+            "kind_path": info["kind_path"],
             "file_count": info["file_count"],
             "entry_count": info["entry_count"],
             # Computed locally by this script: the digest is VERIFIED as a
@@ -273,15 +278,30 @@ def verify(args):
         manifest = json.load(handle)
     recorded = manifest.get("artifact", {})
     algorithm = recorded.get("digest_algorithm", "sha256")
-    if algorithm not in SUPPORTED_ALGORITHMS:
+    artifact_is_directory = os.path.isdir(args.artifact) and not os.path.islink(args.artifact)
+    if artifact_is_directory:
+        prefix = "tree-"
+        suffix = "-v2"
+        if not algorithm.startswith(prefix) or not algorithm.endswith(suffix):
+            print("unsupported or legacy directory digest algorithm: %s" % algorithm,
+                  file=sys.stderr)
+            return 2
+        hash_algorithm = algorithm[len(prefix):-len(suffix)]
+    else:
+        hash_algorithm = algorithm
+    if hash_algorithm not in SUPPORTED_ALGORITHMS:
         print("unsupported algorithm in manifest: %s" % algorithm, file=sys.stderr)
         return 2
     try:
-        info = describe_artifact(args.artifact, algorithm)
+        info = describe_artifact(args.artifact, hash_algorithm)
     except FileNotFoundError:
         print("artifact not found: %s" % args.artifact, file=sys.stderr)
         return 2
-    ok = info["digest"] == recorded.get("digest")
+    integrity_fields = ("digest_algorithm", "digest", "size_bytes", "file_count", "entry_count")
+    if "kind_path" in recorded:
+        integrity_fields += ("kind_path",)
+    ok = all(key in recorded and info.get(key) == recorded.get(key)
+             for key in integrity_fields)
     print("VERIFY: %s" % ("MATCH" if ok else "MISMATCH"))
     print("  algorithm: %s" % algorithm)
     print("  manifest:  %s" % recorded.get("digest"))

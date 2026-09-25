@@ -29,7 +29,8 @@ The manifest is the artifact of `trace-artifact-provenance`. It is JSON so a rev
     "path": "local path or registry reference",
     "size_bytes": 12345,
     "digest": "hex",
-    "digest_algorithm": "sha256",
+    "digest_algorithm": "sha256 | tree-sha256-v2 | sha512 | tree-sha512-v2",
+    "kind_path": "file | directory",
     "file_count": 1,
     "entry_count": 2,
     "status": "VERIFIED"
@@ -99,14 +100,15 @@ deployment.digest   SUPPLIED until read from the platform's artifact identity
 
 ## Directory and bundle digests
 
-For a directory, the digest is computed over a deterministic tree representation:
+For a directory, the digest algorithm is `tree-sha256-v2` or `tree-sha512-v2`. The versioned digest uses this deterministic representation:
 
-1. Walk the tree without following symlinks.
-2. Collect every file and symlink, sorted by relative path, byte-wise.
-3. For each entry, hash the relative path and the entry type into the running hash; then hash the file bytes (files) or the symlink target (symlinks).
-4. Record the file count and the entry count.
+1. Start the hash with `EGA-TREE-V2`.
+2. Walk the tree without following symlinks. Empty directories are excluded.
+3. Collect every file and symlink, sorted by UTF-8 relative path bytes.
+4. For each entry, hash a one-byte type tag, an unsigned 64-bit big-endian path length, and the path bytes. A file adds its unsigned 64-bit size and raw SHA-256/SHA-512 content digest. A symlink adds an unsigned 64-bit target length and target bytes.
+5. Record and verify the digest algorithm, digest, total file size, file count, and entry count.
 
-Symlinks are included by target and never followed, so two trees that differ only by a symlink target produce different digests, and a symlink pointing into the tree cannot cause a cycle or recursion.
+Explicit lengths make entry boundaries unambiguous. Symlinks are included by target and never followed, so two trees that differ only by a symlink target produce different digests, and a symlink pointing into the tree cannot cause a cycle or recursion. Legacy unversioned directory digests are rejected rather than reinterpreted.
 
 ## Independent re-check
 

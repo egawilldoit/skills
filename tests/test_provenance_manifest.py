@@ -102,6 +102,47 @@ class TestDirectoryArtifact(unittest.TestCase):
                              f"invalid directory recheck suggested: {cmd}")
             self.assertIn("provenance_manifest.py", cmd)
 
+    def test_reviewed_nul_collision_has_distinct_digests_and_mismatches(self):
+        tree_a = self.dir / "tree-a"
+        tree_b = self.dir / "tree-b"
+        tree_a.mkdir()
+        tree_b.mkdir()
+        (tree_a / "x").write_bytes(b"one\0y\0file\0two")
+        (tree_b / "x").write_bytes(b"one")
+        (tree_b / "y").write_bytes(b"two")
+        manifest_a = provenance_manifest.build_manifest(args(artifact=str(tree_a)))
+        manifest_b = provenance_manifest.build_manifest(args(artifact=str(tree_b)))
+        self.assertNotEqual(manifest_a["artifact"]["digest"], manifest_b["artifact"]["digest"])
+        self.assertEqual(manifest_a["artifact"]["digest_algorithm"], "tree-sha256-v2")
+        manifest_path = self.dir / "collision-manifest.json"
+        manifest_path.write_text(json.dumps(manifest_a))
+        code, out, _ = run_cli("--artifact", str(tree_b), "--verify", str(manifest_path))
+        self.assertEqual(code, 1)
+        self.assertIn("MISMATCH", out)
+
+    def test_directory_digest_ignores_creation_order(self):
+        other = self.dir / "other-order"
+        other.mkdir()
+        (other / "sub").mkdir()
+        (other / "sub" / "c.txt").write_text("gamma")
+        (other / "a.txt").write_text("alpha")
+        (other / "b.txt").write_text("beta")
+        first = provenance_manifest.build_manifest(args(artifact=str(self.tree)))
+        second = provenance_manifest.build_manifest(args(artifact=str(other)))
+        self.assertEqual(first["artifact"]["digest"], second["artifact"]["digest"])
+
+    def test_directory_manifest_metadata_mismatch_fails(self):
+        for field in ("entry_count", "file_count", "size_bytes"):
+            with self.subTest(field=field):
+                manifest_path = self.dir / ("metadata-%s.json" % field)
+                run_cli("--artifact", str(self.tree), "--output", str(manifest_path))
+                manifest = json.loads(manifest_path.read_text())
+                manifest["artifact"][field] += 1
+                manifest_path.write_text(json.dumps(manifest))
+                code, out, _ = run_cli("--artifact", str(self.tree), "--verify", str(manifest_path))
+                self.assertEqual(code, 1)
+                self.assertIn("MISMATCH", out)
+
     def test_directory_verification_mismatch(self):
         manifest_path = self.dir / "manifest.json"
         run_cli("--artifact", str(self.tree), "--output", str(manifest_path))

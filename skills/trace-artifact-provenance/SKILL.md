@@ -71,11 +71,11 @@ Caller-supplied build IDs, release IDs, deployment targets, and deployment versi
 ## Digest rules
 
 - Prefer SHA-256. Record the algorithm with the digest.
-- For a directory or bundle, hash a deterministic tree representation: relative paths sorted, entry type, then each file's bytes or each symlink's target. Record the file and entry counts. Symlinks are included by target and never followed, so two trees differing only by a symlink target hash differently.
+- For a directory or bundle, use the versioned `tree-sha256-v2` or `tree-sha512-v2` digest. It hashes sorted file and symlink paths with explicit length framing, file size and content digest, or symlink target bytes. Empty directories are excluded; symlinks are never followed. Verify the algorithm, digest, size, file count, and entry count.
 - Never hash a re-encoded or re-zipped artifact and call it the original. Hash the exact bytes distributed.
 - For a container image, the image digest is the identity, not the mutable tag.
 - Two artifacts with the same digest are the same bytes. Same tag is not the same bytes.
-- A directory digest is a custom deterministic representation: re-verify it with `provenance_manifest.py --artifact <path> --verify <manifest>`, not `sha256sum <path>`.
+- A directory digest is a custom versioned representation: re-verify it with `provenance_manifest.py --artifact <path> --verify <manifest>`, not `sha256sum <path>`. Unversioned directory digests are rejected.
 
 ## Manifest
 
