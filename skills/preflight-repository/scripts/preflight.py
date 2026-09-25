@@ -4,6 +4,18 @@
 Read-only. Never mutates the repository. Uses git, and gh only when present.
 The model interprets ambiguity; this script establishes facts.
 
+Facts are separated by evidence class:
+
+* worktree.current_kind classifies THIS checkout (main / linked / submodule /
+  other) using git's own path data, not worktree counts and not `.git`-file
+  sniffing.
+* sync.tracking_parity compares HEAD with the local @{upstream} tracking ref.
+* sync.remote_parity compares HEAD with the live remote branch SHA obtained
+  read-only via `git ls-remote origin`. Tracking parity is never substituted
+  for remote parity; when the remote cannot be reached the value is unknown.
+* branch.default comes from remote truth where possible. The source is
+  recorded, and a local main/master fallback carries lower evidence status.
+
 Usage:
     python3 preflight.py [--repo PATH] [--default-branch NAME] [--json]
 
@@ -70,6 +82,82 @@ def parse_remote(url):
     return {"host": host, "owner": owner, "name": name}
 
 
+def ls_remote_branch(root, branch):
+    """Read-only live query of the remote branch SHA. (ok, sha_or_url_or_none)."""
+    ok, out = git(["ls-remote", "origin", "refs/heads/" + branch], cwd=root)
+    if not ok:
+        return False, None
+    if not out:
+        return True, None
+    return True, out.split()[0]
+
+
+def classify_worktree(root, superproject):
+    """Classify this checkout using git's own paths.
+
+    Returns (current_kind, git_dir_abs, git_common_dir_abs) where current_kind
+    is one of: submodule, linked, main, unknown.
+    """
+    ok_gd, git_dir = git(["rev-parse", "--path-format=absolute", "--git-dir"], cwd=root)
+    ok_gc, git_common = git(["rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=root)
+    if not (ok_gd and ok_gc and git_dir and git_common):
+        return "unknown", git_dir or None, git_common or None
+
+    git_dir_abs = os.path.normpath(git_dir)
+    git_common_abs = os.path.normpath(git_common)
+
+    if superproject:
+        # git reports a non-empty superproject working tree: a submodule checkout.
+        return "submodule", git_dir_abs, git_common_abs
+
+    # A linked worktree gets its own per-worktree dir under .git/worktrees/,
+    # so git_dir differs from git_common_dir. The main checkout's git_dir
+    # equals (or resolves to) the common dir.
+    if os.path.realpath(git_dir_abs) != os.path.realpath(git_common_abs):
+        return "linked", git_dir_abs, git_common_abs
+
+    return "main", git_dir_abs, git_common_abs
+
+
+def resolve_default_branch(root, explicit_override):
+    """Resolve the remote default branch with recorded evidence source.
+
+    Returns (default_branch, default_branch_source). Sources, best first:
+      explicit_override    -- caller supplied --default-branch
+      remote_head_symref   -- `git ls-remote --symref origin HEAD`
+      local_origin_head    -- local refs/remotes/origin/HEAD (may be stale)
+      local_fallback       -- a local main/master exists (lowest evidence)
+      unknown              -- nothing resolved
+    """
+    if explicit_override:
+        return explicit_override, "explicit_override"
+
+    has_remote = run_git_remote_ok(root)
+    if has_remote:
+        ok, out = git(["ls-remote", "--symref", "origin", "HEAD"], cwd=root)
+        if ok and out:
+            for line in out.splitlines():
+                symref, _, sha = line.partition("\t")
+                if symref.startswith("ref: refs/heads/"):
+                    return symref[len("ref: refs/heads/"):], "remote_head_symref"
+
+    ok, sym = git(["symbolic-ref", "--short", "-q", "refs/remotes/origin/HEAD"], cwd=root)
+    if ok and sym:
+        return sym.split("/", 1)[-1], "local_origin_head"
+
+    for candidate in ("main", "master"):
+        ok, _ = git(["rev-parse", "--verify", "-q", candidate], cwd=root)
+        if ok:
+            return candidate, "local_fallback"
+
+    return None, "unknown"
+
+
+def run_git_remote_ok(root):
+    ok, _ = git(["remote", "get-url", "origin"], cwd=root)
+    return ok
+
+
 def main():
     parser = argparse.ArgumentParser(description="Gather repository facts (read-only).")
     parser.add_argument("--repo", default=".", help="path inside the work tree")
@@ -85,28 +173,24 @@ def main():
         return 2
 
     ok, root = git(["rev-parse", "--show-toplevel"], cwd=start)
-    ok_gd, git_dir = git(["rev-parse", "--git-dir"], cwd=start)
-    ok_gc, git_common = git(["rev-parse", "--git-common-dir"], cwd=start)
 
-    ok, head_sha = git(["rev-parse", "HEAD"], cwd=root)
-    head_sha = head_sha if ok else None
+    ok_super, superproject = git(
+        ["rev-parse", "--show-superproject-working-tree"], cwd=root)
+    superproject = superproject if (ok_super and superproject) else None
+
+    head_sha = None
+    ok, head_sha_raw = git(["rev-parse", "HEAD"], cwd=root)
+    if ok and head_sha_raw:
+        head_sha = head_sha_raw
 
     ok, branch = git(["symbolic-ref", "--short", "-q", "HEAD"], cwd=root)
     detached = not ok
     branch = branch if ok else None
 
-    # default branch
-    default_branch = args.default_branch
-    if not default_branch:
-        ok, sym = git(["symbolic-ref", "--short", "-q", "refs/remotes/origin/HEAD"], cwd=root)
-        if ok and sym:
-            default_branch = sym.split("/", 1)[-1]
-    if not default_branch:
-        for candidate in ("main", "master"):
-            ok, _ = git(["rev-parse", "--verify", "-q", candidate], cwd=root)
-            if ok:
-                default_branch = candidate
-                break
+    worktree_kind, git_dir_abs, git_common_abs = classify_worktree(root, superproject)
+
+    # default branch, with evidence source
+    default_branch, default_branch_source = resolve_default_branch(root, args.default_branch)
 
     # merge base against default branch
     merge_base = None
@@ -124,35 +208,46 @@ def main():
     unstaged = sum(1 for l in changed if len(l) > 1 and l[1] not in " ?" and l[0] != "?")
     untracked = sum(1 for l in changed if l.startswith("??"))
 
-    # upstream and ahead/behind
+    # upstream tracking ref (local truth)
     upstream = None
     ahead = behind = None
-    ok, up = git(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"], cwd=root)
-    if ok and up:
-        upstream = up
-        ok, counts = git(["rev-list", "--left-right", "--count", "HEAD...@{upstream}"], cwd=root)
-        if ok and counts:
-            left, _, right = counts.partition("\t")
-            try:
-                ahead, behind = int(left), int(right)
-            except ValueError:
-                ahead = behind = None
+    tracking_parity = "unknown"
+    if not detached:
+        ok, up = git(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"], cwd=root)
+        if ok and up:
+            upstream = up
+            ok, up_sha = git(["rev-parse", "--verify", "-q", upstream], cwd=root)
+            if ok and up_sha and head_sha:
+                tracking_parity = "yes" if up_sha == head_sha else "no"
+            ok, counts = git(["rev-list", "--left-right", "--count",
+                              "HEAD...%s" % upstream], cwd=root)
+            if ok and counts:
+                left, _, right = counts.partition("\t")
+                try:
+                    ahead, behind = int(left), int(right)
+                except ValueError:
+                    ahead = behind = None
+    elif upstream is None:
+        tracking_parity = "not_applicable" if detached else "unknown"
 
-    # remote parity: local HEAD vs upstream SHA
+    # live remote parity (remote truth, read-only ls-remote)
     remote_parity = "unknown"
-    if upstream:
-        ok, up_sha = git(["rev-parse", upstream], cwd=root)
-        if ok and up_sha and head_sha:
-            remote_parity = "yes" if up_sha == head_sha else "no"
-
-    # worktree kind
-    ok, toplevel = git(["rev-parse", "--show-toplevel"], cwd=root)
-    ok, wt_list = git(["worktree", "list", "--porcelain"], cwd=root)
-    is_linked = False
-    if ok and wt_list:
-        # A linked worktree's first entry is the main worktree; count entries.
-        is_linked = wt_list.count("worktree ") > 1
-    is_submodule = os.path.exists(os.path.join(root, ".git")) and os.path.isfile(os.path.join(root, ".git"))
+    remote_branch_sha = None
+    remote_reachable = None
+    if branch and run_git_remote_ok(root):
+        ok, sha = ls_remote_branch(root, branch)
+        if ok:
+            remote_reachable = True
+            if sha:
+                remote_branch_sha = sha
+                if head_sha:
+                    remote_parity = "yes" if sha == head_sha else "no"
+            else:
+                # Branch does not exist on the remote yet.
+                remote_parity = "not_applicable"
+        else:
+            remote_reachable = False
+            remote_parity = "unknown"
 
     # remotes
     ok, remotes_raw = git(["remote", "-v"], cwd=root)
@@ -208,8 +303,9 @@ def main():
         "repository": {
             "identity": identity,
             "root": root,
-            "git_dir": git_dir if ok_gd else None,
-            "git_common_dir": git_common if ok_gc else None,
+            "git_dir": git_dir_abs,
+            "git_common_dir": git_common_abs,
+            "superproject_working_tree": superproject,
             "fetch_url": fetch_url,
             "push_url": push_url,
             "push_matches_fetch": push_matches_fetch,
@@ -218,6 +314,7 @@ def main():
             "current": branch,
             "detached": detached,
             "default": default_branch,
+            "default_source": default_branch_source,
             "upstream": upstream,
         },
         "commit": {
@@ -225,8 +322,9 @@ def main():
             "merge_base": merge_base,
         },
         "worktree": {
-            "is_linked": is_linked,
-            "is_submodule": is_submodule,
+            "current_kind": worktree_kind,
+            "is_submodule": worktree_kind == "submodule",
+            "superproject_working_tree": superproject,
         },
         "tree": {
             "clean": len(changed) == 0,
@@ -238,7 +336,10 @@ def main():
         "sync": {
             "ahead": ahead,
             "behind": behind,
+            "tracking_parity": tracking_parity,
             "remote_parity": remote_parity,
+            "remote_branch_sha": remote_branch_sha,
+            "remote_reachable": remote_reachable,
         },
         "pull_request": pr,
         "checks": checks,
@@ -254,8 +355,10 @@ def main():
             "root_proven": bool(root),
             "head_proven": bool(head_sha),
             "tree_clean": len(changed) == 0,
-            "default_branch_proven": bool(default_branch),
+            "default_branch_proven": default_branch_source in ("explicit_override", "remote_head_symref"),
+            "default_branch_source": default_branch_source,
             "detached_head": detached,
+            "tracking_parity": tracking_parity,
             "remote_parity": remote_parity,
         },
     }
@@ -271,14 +374,17 @@ def main():
         print("ROOT:       %s" % root)
         print("BRANCH:     %s%s" % (branch or "(detached)", "" if not detached else " [detached]"))
         print("HEAD:       %s" % (head_sha or "unknown"))
-        print("DEFAULT:    %s" % (default_branch or "unknown"))
+        print("DEFAULT:    %s (source: %s)" % (default_branch or "unknown", default_branch_source))
         print("MERGE BASE: %s" % (merge_base or "unknown"))
         print("TREE:       %s" % ("clean" if len(changed) == 0 else "dirty(%d)" % len(changed)))
-        print("SYNC:       ahead=%s behind=%s parity=%s" % (ahead, behind, remote_parity))
+        print("SYNC:       ahead=%s behind=%s tracking=%s remote=%s (live=%s)" % (
+            ahead, behind, tracking_parity, remote_parity, remote_reachable))
         print("PR:         %s" % (("PR #%s base=%s head=%s" % (
             pr.get("number"), pr.get("base"), pr.get("head_sha"))) if pr else "none"))
         print("CHECKS:     %s" % ("present" if checks else "unknown"))
-        print("WORKTREE:   linked=%s submodule=%s" % (is_linked, is_submodule))
+        print("WORKTREE:   current=%s" % worktree_kind)
+        if superproject:
+            print("SUPERPROJECT: %s" % superproject)
         print("GH:         %s" % ("present" if gh_present else "absent"))
         print("--- verdict inputs ---")
         for key, value in facts["verdict_inputs"].items():

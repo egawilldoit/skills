@@ -28,20 +28,22 @@ Collect only what the task needs, but never skip repository identity or HEAD.
 ```text
 repository identity      host, owner, name, from the resolved remote URL
 root path                worktree top level, and git dir
-default branch           origin/HEAD or the configured default
+default branch           from the remote (ls-remote symref) when reachable; the source is recorded
 current branch           or detached HEAD
 HEAD SHA                 full commit id
 merge base               HEAD against the default branch and against the PR base
 dirty state              staged, unstaged, untracked
-ahead/behind             versus the upstream tracking branch
-worktree                 is this a linked worktree, submodule, or main checkout
+tracking parity          HEAD versus the local @{upstream} tracking ref
+remote parity            HEAD versus the live remote branch SHA (read-only ls-remote)
+worktree                 is THIS checkout the main worktree, a linked worktree, or a submodule
 remote                   fetch and push URLs, and whether they match
-remote parity            does local HEAD equal the remote tracking SHA
 associated PR            open PR whose head is this branch, if any
 PR base/head             the PR's base branch and head SHA
 CI state                 checks for the exact head SHA, when relevant
 deployment identity      environment, project, and version, when relevant
 ```
+
+Worktree facts are classified from git's own paths (`--git-dir` versus `--git-common-dir`, and the superproject working tree), not from worktree counts and not from `.git`-file sniffing: having another worktree in the repository does not make this checkout linked, and both linked worktrees and submodules may use gitfiles. Tracking parity and remote parity are separate facts: the tracking ref is only the last fetched value, and it is never substituted for live remote truth. A local `main` or `master` branch existing is not proof that it is the remote default branch.
 
 Mark each fact `PROVEN`, `SUPPORTED`, `ASSUMED`, or `UNRESOLVED`. `INSUFFICIENT_EVIDENCE` is the verdict when identity, root, or HEAD cannot be proven.
 
@@ -82,7 +84,10 @@ Example: desired is "branch off current main with a clean tree"; proven is "on a
 - Never report a fact as `PROVEN` unless a command or file shows it.
 - Never run a mutating git command during preflight. Read only.
 - Never assume the current directory is the repository root. Prove it.
-- Never treat a remote tracking SHA as the remote's current truth. It is only the last fetched value.
+- Never treat a remote tracking SHA as the remote's current truth. It is only the last fetched value. Compare live remote parity with a read-only `git ls-remote origin refs/heads/<branch>`.
+- When live remote truth cannot be resolved (remote unreachable, detached HEAD), report remote parity `unknown` or `not_applicable`; never substitute tracking parity.
+- Do not classify the worktree from `.git` being a file: linked worktrees and submodules both use gitfiles.
+- A local `main`/`master` branch is not proof of the remote default branch. Use `git ls-remote --symref origin HEAD` and record the evidence source.
 - When a fact is required and unknown, return `INSUFFICIENT_EVIDENCE`, not a guess.
 
 ## Output contract
@@ -95,7 +100,7 @@ ROOT: <path>
 BRANCH: <current> -> HEAD <sha>
 BASE: <default branch> merge-base <sha>
 TREE: clean | dirty(<n>)
-SYNC: ahead <n>, behind <n>, remote parity <yes|no|unknown>
+SYNC: ahead <n>, behind <n>, tracking parity <yes|no|unknown>, remote parity <yes|no|unknown|not_applicable>
 PR: <number or none>, base <branch>, head <sha>
 CI: <state or not relevant>
 DEPLOY: <identity or not relevant>
