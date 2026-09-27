@@ -50,6 +50,7 @@ jobs:
           python3 scripts/sync_operating_contract.py --check
           python3 scripts/routing_audit.py
           python3 scripts/trigger_audit.py
+          python3 scripts/validate_ega_metadata.py
           python3 -m unittest discover -s tests -p 'test_*.py' -v
           git diff --check
 
@@ -92,6 +93,7 @@ jobs:
           python3 scripts/sync_operating_contract.py --check
           python3 scripts/routing_audit.py
           python3 scripts/trigger_audit.py
+          python3 scripts/validate_ega_metadata.py
           python3 -m unittest discover -s tests -p 'test_*.py' -v
           git diff --check
 
@@ -127,5 +129,6 @@ jobs:
           python3 scripts/sync_operating_contract.py --check
           python3 scripts/routing_audit.py
           python3 scripts/trigger_audit.py
+          python3 scripts/validate_ega_metadata.py
           python3 -m unittest discover -s tests -p 'test_*.py' -v
           git diff --check

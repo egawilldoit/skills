@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Routing audit for owned skills, using the trigger-case suite.
+"""Routing audit for the full catalog, using the trigger-case suite.
 
 Two layers:
 
-Structural (hard): the suite must cover every owned skill, every case must be
+Structural (hard): the suite must cover every skill, every case must be
 complete, and every referenced sibling must exist.
 
 Lexical (soft): real activation is semantic, so the word-overlap check below is
@@ -85,7 +85,9 @@ def main() -> int:
         return 1
 
     descriptions, modes = load_skills()
-    owned = sorted(name for name, mode in modes.items() if mode in {"adapted", "original"})
+    # The EGA routing metadata now covers the full catalog, so the trigger
+    # suite must cover every skill, not only the adapted/original ones.
+    expected = sorted(descriptions)
 
     cases = json.loads(CASES.read_text())
     if not isinstance(cases, list):
@@ -96,11 +98,11 @@ def main() -> int:
     warnings: list[str] = []
 
     seen = [c.get("skill") for c in cases]
-    if sorted(seen) != owned:
-        missing = sorted(set(owned) - set(seen))
-        extra = sorted(set(seen) - set(owned))
+    if sorted(seen) != expected:
+        missing = sorted(set(expected) - set(seen))
+        extra = sorted(set(seen) - set(expected))
         if missing:
-            errors.append(f"suite is missing owned skills: {missing}")
+            errors.append(f"suite is missing skills: {missing}")
         if extra:
             errors.append(f"suite has unknown skills: {extra}")
 
@@ -148,7 +150,7 @@ def main() -> int:
     if errors:
         print(f"\nFAIL: {len(errors)} structural error(s)")
         return 1
-    print(f"\nOK: {len(cases)} owned skills, {len(cases) * 6} trigger cases, "
+    print(f"\nOK: {len(cases)} skills, {len(cases) * 6} trigger cases, "
           f"{len(warnings)} informational lexical note(s) at margin {args.margin}")
     return 0
 

@@ -115,6 +115,17 @@ its origin repository, source path, source skill, source commit, and license.
 The source commit is pinned once for the whole import. `THIRD_PARTY_NOTICES.md`
 carries the upstream MIT notices.
 
+## EGA routing metadata
+
+Every skill carries a local `ega.yaml` routing-metadata companion file
+(`schema_version: 1`). These files are local package/routing metadata authored
+for this catalog; they do not change any skill's provenance classification, and
+they do not claim authorship of copied upstream methodology. The EGA runtime
+and its V1 schema remain canonical; `scripts/validate_ega_metadata.py` is a
+source-side compatibility guard that checks the repository's `ega.yaml` files
+against the EGA routing-metadata contract so a metadata regression is caught in
+CI before the catalog reaches the EGA importer.
+
 ## How to validate and update the catalog
 
 ```bash
@@ -133,8 +144,11 @@ python3 scripts/sync_operating_contract.py --check
 # review description overlap across at-risk clusters
 python3 scripts/routing_audit.py
 
-# check owned skills route their trigger cases to the intended skill
+# check every skill routes its trigger cases to the intended skill
 python3 scripts/trigger_audit.py
+
+# validate EGA routing metadata (ega.yaml) against the V1 compatibility guard
+python3 scripts/validate_ega_metadata.py
 
 # run the deterministic helper test suite
 python3 -m unittest discover -s tests -p 'test_*.py'

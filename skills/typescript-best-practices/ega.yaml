@@ -1,0 +1,8 @@
+schema_version: 1
+frameworks: [typescript]
+triggers:
+  - "typescript"
+  - "tsx"
+  - "type safety"
+  - "typescript best practices"
+  - "typed"

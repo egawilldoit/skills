@@ -1,0 +1,8 @@
+schema_version: 1
+domains: [architecture]
+triggers:
+  - "design this"
+  - "architect this"
+  - "design an architecture"
+  - "system design"
+  - "design the architecture"

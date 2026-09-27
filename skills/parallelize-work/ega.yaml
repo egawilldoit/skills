@@ -1,0 +1,9 @@
+schema_version: 1
+domains: [parallelism]
+triggers:
+  - "parallelize"
+  - "fan out"
+  - "fan this out"
+  - "run in parallel"
+  - "parallelize this"
+  - "run these in parallel"
