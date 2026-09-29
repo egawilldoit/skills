@@ -1,5 +1,4 @@
 schema_version: 1
-domains: [codebase]
 triggers:
   - "how does this work"
   - "how does x work"
@@ -7,3 +6,7 @@ triggers:
   - "explain this code"
   - "understand this codebase"
   - "walk me through this code"
+  - "explain how this subsystem works"
+  - "how does this subsystem work"
+  - "explain this subsystem"
+  - "understand this subsystem"

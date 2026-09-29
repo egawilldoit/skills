@@ -6,3 +6,6 @@ triggers:
   - "design an architecture"
   - "system design"
   - "design the architecture"
+anti_triggers:
+  - "improve codebase architecture"
+  - "deepening opportunities"

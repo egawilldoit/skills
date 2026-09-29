@@ -7,3 +7,8 @@ triggers:
   - "run in parallel"
   - "parallelize this"
   - "run these in parallel"
+anti_triggers:
+  - "context window"
+  - "context is filling up"
+  - "raw payloads"
+  - "summaries in the main thread"
