@@ -74,7 +74,7 @@ class TestLongestIdentity(unittest.TestCase):
                         (Path(__file__).resolve().parents[1] / "skills").iterdir()
                         if p.is_dir())
         identities = [f"{plugin}:{name}" for name in skills]
-        self.assertEqual(len(skills), 67)
+        self.assertEqual(len(skills), 68)
         for identity in identities:
             self.assertLessEqual(len(identity), 64, identity)
 
