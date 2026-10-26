@@ -365,6 +365,11 @@ METADATA: dict[str, tuple[str, str, str]] = {
         "Deliver one bounded outcome to its proven boundary",
         "Use $ship-one-outcome to take this authorized outcome to its boundary.",
     ),
+    "video-knowledge": (
+        "Video Knowledge",
+        "Turn videos into visual, source-checked knowledge",
+        "Use $video-knowledge to analyze this video, audit the details, and make a visual-first knowledge note.",
+    ),
 }
 
 MIN_SHORT = 25

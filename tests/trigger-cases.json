@@ -735,5 +735,16 @@
     "collision": "get the core data structures right before writing the logic",
     "collision_expected": "principle-foundational-thinking",
     "edge": "the language is dynamically typed; the discipline does not apply"
+  },
+  {
+    "skill": "video-knowledge",
+    "direct": "Use $video-knowledge to study this lecture transcript in three passes, with a visual knowledge map.",
+    "indirect": "turn this video into a detailed knowledge breakdown with every useful example, implications and what to watch out for",
+    "incomplete": "audit my video notes",
+    "negative": "rewrite this existing engineering RFC to improve structure and grammar",
+    "negative_expected": "technical-writing",
+    "collision": "mine repeated agent chat workflows from the last few months and propose which deserve a new reusable skill",
+    "collision_expected": "mine-work-patterns",
+    "edge": "I have an EGA Atlas page for this topic already; do a third source-based review and update only real missing details without republishing the transcript"
   }
 ]

@@ -322,5 +322,6 @@ validation dependencies are exact-pinned in `requirements-ci.txt`.
 | [`reconcile-project-truth`](skills/reconcile-project-truth/) | Resolve contradictions across project sources | `-` | ORIGINAL |
 | [`ship-one-outcome`](skills/ship-one-outcome/) | Deliver one bounded outcome to its proven boundary | `-` | ORIGINAL |
 | [`trace-artifact-provenance`](skills/trace-artifact-provenance/) | Trace source to artifact to release lineage | `-` | ORIGINAL |
+| [`video-knowledge`](skills/video-knowledge/) | Three-pass visual, source-grounded video knowledge extraction | `-` | ORIGINAL |
 
-Catalog counts: 32 copied, 24 adapted, 11 original, 67 total.
+Catalog counts: 32 copied, 24 adapted, 12 original, 68 total.

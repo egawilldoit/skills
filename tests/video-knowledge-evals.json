@@ -1,0 +1,40 @@
+{
+  "skill_name": "video-knowledge",
+  "status": "not_run",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Make a visual-first deep analysis of this excerpt: 'I apply 80/20 to the attention I give my creative and fitness goals. I also use 80/20 for being committed to plans on most evenings while sometimes going out spontaneously. Last Thursday I declined an 8:30 PM invitation to protect my morning. I read on trains. This is personal to me.'",
+      "expected_output": "A diagram first; the two meanings of 80/20 are kept distinct; the Thursday choice and reading on trains survive; no measured-effect claim.",
+      "assertions": [
+        "Diagram first",
+        "Two distinct 80/20 uses",
+        "Thursday and train details kept",
+        "Personal, not universal",
+        "No invented metadata or measurements"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Here is only an inaccessible video URL: https://www.youtube.com/watch?v=exampleonly. Explain the entire transcript and screen demo, but no media/transcript is accessible. Do not make things up.",
+      "expected_output": "Does not pretend to have read or watched; identifies missing source; invents no visuals, numbers, creators, titles or timestamps.",
+      "assertions": [
+        "Acknowledges missing primary source",
+        "Avoids content inventions",
+        "Explains next needed input"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Please re-audit Video 01 and update EGA Atlas. The existing wiki/concepts/time-management.md already covers nine lessons but confuses two 80/20 ratios and treats a hypothetical 2-hour scrolling example as measured evidence. Public repo; don't duplicate pages or upload a full transcript.",
+      "expected_output": "Only source-confirmed corrections to canonical page if authorized; preserves public safety and reports actual commits/readback.",
+      "assertions": [
+        "Inspects source before completeness claims",
+        "Finds existing canonical page",
+        "Labels hypothetical example and two ratios",
+        "Does not upload full transcript",
+        "Reports actually verified Git changes"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Video Knowledge"
+  short_description: "Turn videos into visual, source-checked knowledge"
+  default_prompt: "Use $video-knowledge to analyze this video, audit the details, and make a visual-first knowledge note."

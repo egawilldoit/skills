@@ -1,0 +1,21 @@
+schema_version: 1
+domains:
+  - learning
+  - documentation
+triggers:
+  - "analyze this video deeply"
+  - "extract knowledge from a video"
+  - "break down this transcript"
+  - "video knowledge"
+  - "visual first video analysis"
+  - "what should I pay attention to in this video"
+  - "review the transcript for missing details"
+  - "third pass on the video knowledge"
+  - "add video lessons to ega atlas"
+  - "update my knowledge base from a video"
+anti_triggers:
+  - "edit the video footage"
+  - "generate subtitles only"
+  - "write a script for a new video"
+  - "polish an unrelated technical document"
+  - "summarize my commits"
