@@ -109,6 +109,24 @@ class TestValidateSkill(unittest.TestCase):
             self.assertTrue(any("missing ega.yaml" in e for e in errs), errs)
 
 
+class TestArchitectureRouting(unittest.TestCase):
+    def test_architecture_intent_keeps_its_domain_signal(self):
+        # The real Hub resolver needs this signal to distinguish an architecture
+        # proposal from PR writing. Keep the exact reproduction in trigger-cases.
+        metadata = validate_ega_metadata.yaml.safe_load(
+            (validate_ega_metadata.SKILLS_DIR / "design-architecture" / "ega.yaml").read_text()
+        )
+        self.assertIn("architecture", metadata.get("domains", []))
+
+    def test_named_vercel_guidance_is_declared_as_anti_trigger(self):
+        task = "Our React app feels sluggish. Apply the performance and architecture guidance from the Vercel team."
+        metadata = validate_ega_metadata.yaml.safe_load(
+            (validate_ega_metadata.SKILLS_DIR / "design-architecture" / "ega.yaml").read_text()
+        )
+        self.assertTrue(any(phrase.casefold() in task.casefold()
+                            for phrase in metadata.get("anti_triggers", [])))
+
+
 class TestShipOneOutcomeRouting(unittest.TestCase):
     def test_trivial_edit_with_pr_boundary_has_no_delivery_trigger(self):
         # Keep this exact reported request: the finish boundary alone must not
