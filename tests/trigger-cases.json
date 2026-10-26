@@ -129,7 +129,7 @@
     "negative_expected": "compare-designs",
     "collision": "design an auditable investigation for this migration with unknowns and a hypothesis loop",
     "collision_expected": "design-investigation",
-    "edge": "the change crosses three services and touches shared state, but there is no obvious right shape yet"
+    "edge": "We need to split the monolith into services next quarter. I want a proper architecture proposal before anyone writes code."
   },
   {
     "skill": "design-investigation",
