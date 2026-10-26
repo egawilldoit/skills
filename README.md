@@ -320,6 +320,7 @@ validation dependencies are exact-pinned in `requirements-ci.txt`.
 | [`integrate-pr-stack`](skills/integrate-pr-stack/) | Land stacked PRs one at a time without drift | `-` | ORIGINAL |
 | [`preflight-repository`](skills/preflight-repository/) | Establish exact repo reality before serious work | `-` | ORIGINAL |
 | [`reconcile-project-truth`](skills/reconcile-project-truth/) | Resolve contradictions across project sources | `-` | ORIGINAL |
+| [`ship-one-outcome`](skills/ship-one-outcome/) | Deliver one bounded outcome to its proven boundary | `-` | ORIGINAL |
 | [`trace-artifact-provenance`](skills/trace-artifact-provenance/) | Trace source to artifact to release lineage | `-` | ORIGINAL |
 
-Catalog counts: 32 copied, 24 adapted, 10 original, 66 total.
+Catalog counts: 32 copied, 24 adapted, 11 original, 67 total.
