@@ -360,6 +360,11 @@ METADATA: dict[str, tuple[str, str, str]] = {
         "Certify a production MCP server end to end",
         "Use $certify-mcp-production before publishing this MCP server.",
     ),
+    "ship-one-outcome": (
+        "Ship One Outcome",
+        "Deliver one bounded outcome to its proven boundary",
+        "Use $ship-one-outcome to take this authorized outcome to its boundary.",
+    ),
 }
 
 MIN_SHORT = 25

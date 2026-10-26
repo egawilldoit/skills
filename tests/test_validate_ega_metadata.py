@@ -109,6 +109,23 @@ class TestValidateSkill(unittest.TestCase):
             self.assertTrue(any("missing ega.yaml" in e for e in errs), errs)
 
 
+class TestShipOneOutcomeRouting(unittest.TestCase):
+    def test_trivial_edit_with_pr_boundary_has_no_delivery_trigger(self):
+        # Keep this exact reported request: the finish boundary alone must not
+        # activate the delivery coordinator. Full routing uses the EGA resolver.
+        task = (
+            "Make the single typo correction in README and stop at a reviewable pull request"
+        )
+        metadata = validate_ega_metadata.yaml.safe_load(
+            (validate_ega_metadata.SKILLS_DIR / "ship-one-outcome" / "ega.yaml").read_text()
+        )
+        normalized_task = " " + " ".join(task.casefold().split()) + " "
+        for trigger in metadata["triggers"]:
+            with self.subTest(trigger=trigger):
+                normalized_trigger = " " + " ".join(trigger.casefold().split()) + " "
+                self.assertNotIn(normalized_trigger, normalized_task)
+
+
 class TestAliasUniqueness(unittest.TestCase):
     def test_conflict_detected(self):
         metadata = {

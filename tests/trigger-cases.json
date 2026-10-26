@@ -308,6 +308,17 @@
     "edge": "the diff is large; split the review across parallel subagents, then open the pull request"
   },
   {
+    "skill": "ship-one-outcome",
+    "direct": "Use $ship-one-outcome to take this authorized outcome through integration and a verified pull request.",
+    "indirect": "own this bounded delivery end to end, prove the real user path, get the worker changes actually integrated, and stop at a reviewable pull request",
+    "incomplete": "deliver this outcome to its stated boundary",
+    "negative": "review this ordinary branch, run focused tests, and open the pull request when it is clean",
+    "negative_expected": "review-and-ship",
+    "collision": "the build check is red; read the logs and apply the smallest repair",
+    "collision_expected": "fix-ci",
+    "edge": "a cancelled worker left uncommitted code; preserve it, prove the changes are in the integration revision, and leave the independent review pending"
+  },
+  {
     "skill": "run-smoke-tests",
     "direct": "Use $run-smoke-tests to run the existing smoke suite and report failures without editing code.",
     "indirect": "Before merge, exercise the project's existing end-to-end smoke tests and show me the traces for failures.",

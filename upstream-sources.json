@@ -47,11 +47,11 @@
     {
       "skill": "check-compiler-errors",
       "origin": "cursor/plugins",
+      "source_skill": "check-compiler-errors",
       "source_path": "cursor-team-kit/skills/check-compiler-errors",
       "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
       "license": "MIT",
-      "mode": "adapted",
-      "source_skill": "check-compiler-errors"
+      "mode": "adapted"
     },
     {
       "skill": "compare-designs",
@@ -419,11 +419,15 @@
     {
       "skill": "run-smoke-tests",
       "origin": "cursor/plugins",
+      "source_skill": "run-smoke-tests",
       "source_path": "cursor-team-kit/skills/run-smoke-tests",
       "source_commit": "12d587dfb20741cafc376c42c696c5f6e2a64487",
       "license": "MIT",
-      "mode": "adapted",
-      "source_skill": "run-smoke-tests"
+      "mode": "adapted"
+    },
+    {
+      "skill": "ship-one-outcome",
+      "mode": "original"
     },
     {
       "skill": "tdd",
