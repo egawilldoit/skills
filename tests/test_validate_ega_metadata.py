@@ -118,7 +118,7 @@ class TestArchitectureRouting(unittest.TestCase):
         )
         self.assertIn("architecture", metadata.get("domains", []))
 
-    def test_named_vercel_guidance_does_not_activate_architecture(self):
+    def test_named_vercel_guidance_is_declared_as_anti_trigger(self):
         task = "Our React app feels sluggish. Apply the performance and architecture guidance from the Vercel team."
         metadata = validate_ega_metadata.yaml.safe_load(
             (validate_ega_metadata.SKILLS_DIR / "design-architecture" / "ega.yaml").read_text()
