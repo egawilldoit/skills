@@ -501,6 +501,10 @@
       "mode": "adapted"
     },
     {
+      "skill": "video-knowledge",
+      "mode": "original"
+    },
+    {
       "skill": "weekly-review",
       "origin": "cursor/plugins",
       "source_path": "cursor-team-kit/skills/weekly-review",
