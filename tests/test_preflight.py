@@ -115,9 +115,11 @@ class TestSyncParity(unittest.TestCase):
         # Remote advances; the local checkout does not. The local tracking
         # ref still matches HEAD, so tracking says yes while the live
         # remote says no: tracking parity is not remote truth.
-        other = self.sc.repo("other-clone")
-        sh(f"git remote add origin {self.sc.base / 'origin'}", cwd=other)
-        sh("git push -q origin main", cwd=other)
+        # Clone the shared history: separately initialized commits only match
+        # accidentally when their timestamps fall within the same second.
+        other = self.sc.base / "other-clone"
+        sh(f"git clone -q {self.sc.base / 'origin'} {other}")
+        sh("git config user.email t@example.com && git config user.name t", cwd=other)
         sh("echo b > b.txt && git add b.txt && git commit -qm advance", cwd=other)
         sh("git push -q origin main", cwd=other)
         out = sh(f"python3 {REPO_SCRIPTS / 'preflight.py'} --repo {self.work} --json")
