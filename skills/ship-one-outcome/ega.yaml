@@ -10,7 +10,6 @@ triggers:
   - "finish this authorized delivery"
   - "resume a stalled delivery handoff"
   - "prove the worker changes were integrated"
-  - "stop at a reviewable pull request"
 anti_triggers:
   - "review and ship this pr"
   - "fix ci"
