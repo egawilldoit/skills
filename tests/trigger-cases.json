@@ -1,5 +1,16 @@
 [
   {
+    "skill": "acceptance-source-accept006",
+    "direct": "run the source acceptance workflow",
+    "indirect": "check that the source manager proposal is reviewable",
+    "incomplete": "source acceptance",
+    "negative": "find blast radius for this change",
+    "negative_expected": "adversarial-review",
+    "collision": "review the branch and open a pull request",
+    "collision_expected": "blast-radius",
+    "edge": "source acceptance on an already reviewed proposal"
+  },
+  {
     "skill": "adversarial-review",
     "direct": "Use $adversarial-review to tear this auth refactor apart before it ships.",
     "indirect": "I want an independent challenge on this payment change for correctness, security, and maintainability, not a normal pass.",
@@ -9,6 +20,17 @@
     "collision": "review this ordinary branch, run focused tests, and open the PR when it is clean",
     "collision_expected": "review-and-ship",
     "edge": "the change already merged, but I still want findings by severity with no fixes applied"
+  },
+  {
+    "skill": "blast-radius",
+    "direct": "Use $blast-radius to find what this change could break elsewhere before it ships.",
+    "indirect": "what else in the app could this refactor break once it merges?",
+    "incomplete": "what could this break?",
+    "negative": "independently challenge this payment change for correctness and security",
+    "negative_expected": "adversarial-review",
+    "collision": "review this ordinary branch, run focused tests, and open the PR when it is clean",
+    "collision_expected": "review-and-ship",
+    "edge": "the change already merged; I still want the downstream impact mapped with proof for each safe fact"
   },
   {
     "skill": "build-execution-contract",
@@ -165,6 +187,28 @@
     "edge": "the failing check points to an external CI provider whose logs I cannot open"
   },
   {
+    "skill": "fix-merge-conflicts",
+    "direct": "Use $fix-merge-conflicts to resolve these merge conflicts non-interactively.",
+    "indirect": "this rebase left conflicts in three files; keep both sides where safe and regenerate the lockfile",
+    "incomplete": "resolve the conflicts",
+    "negative": "watch the PR checks and iterate on failures until all required checks are green",
+    "negative_expected": "loop-on-ci",
+    "collision": "create a focused branch from the default branch and open a concise pull request",
+    "collision_expected": "new-branch-and-pr",
+    "edge": "both sides of the conflict are wrong; preserve neither verbatim but merge the intent and validate"
+  },
+  {
+    "skill": "get-pr-comments",
+    "direct": "Use $get-pr-comments to summarize the review comments on the active pull request.",
+    "indirect": "what exactly did reviewers ask for on this PR? group it by severity with an action list",
+    "incomplete": "what did reviewers say?",
+    "negative": "prepare this pull request for review by cleaning noisy history and improving the description",
+    "negative_expected": "make-pr-easy-to-review",
+    "collision": "independently challenge this completed change for correctness, security, and maintainability",
+    "collision_expected": "adversarial-review",
+    "edge": "the PR has no comments yet; report that plainly instead of inventing findings"
+  },
+  {
     "skill": "integrate-pr-stack",
     "direct": "Use $integrate-pr-stack to land this chain of dependent PRs one at a time.",
     "indirect": "the base branch moved, so the descendant PRs need restacking and only one should merge at a time",
@@ -251,248 +295,6 @@
     "collision": "the PR approval predates the last two pushes; is the evidence still valid for the current head?",
     "collision_expected": "certify-pr-head",
     "edge": "the working tree is clean and on main, but I cannot tell whether this remote is the right repository"
-  },
-  {
-    "skill": "reconcile-project-truth",
-    "direct": "Use $reconcile-project-truth to settle why the tracker says shipped but the deploy says otherwise.",
-    "indirect": "our docs, CI, and deployment disagree about what actually shipped; resolve each claim against its authoritative source",
-    "incomplete": "which source is right about what is deployed?",
-    "negative": "catch me up on where I left off so I can resume",
-    "negative_expected": "recover-work-context",
-    "collision": "trace the artifact digest back to the source commit that produced it",
-    "collision_expected": "trace-artifact-provenance",
-    "edge": "GitHub says the PR merged, CI says the check passed, and production still serves the old build"
-  },
-  {
-    "skill": "record-evidence",
-    "direct": "Use $record-evidence to keep an append-only TSV ledger for tonight's autonomous run.",
-    "indirect": "this multi-phase run will be unattended; keep one row per decision with evidence pointers so I can trust it later",
-    "incomplete": "keep a running log of each decision and its evidence pointer",
-    "negative": "design the auditable investigation plan and hypothesis loop first",
-    "negative_expected": "design-investigation",
-    "collision": "reconstruct the current state of this ongoing work so I can resume it",
-    "collision_expected": "recover-work-context",
-    "edge": "several agents are working in parallel and a reviewer will need the decision trail with base and head SHAs"
-  },
-  {
-    "skill": "recover-design-rationale",
-    "direct": "Use $recover-design-rationale to find out why this timeout threshold is 30 seconds.",
-    "indirect": "why is this retry limit set the way it is? dig through the PRs, issues, and incident records and classify what is proven versus inferred",
-    "incomplete": "why does this threshold have its current value, and what history shaped it?",
-    "negative": "walk me through how this subsystem works and where a new change belongs",
-    "negative_expected": "understand-codebase",
-    "collision": "reconstruct where the ongoing migration work left off so I can resume it",
-    "collision_expected": "recover-work-context",
-    "edge": "the code says one thing, the commit message says another, and there is no PR; give me what is actually proven"
-  },
-  {
-    "skill": "recover-work-context",
-    "direct": "Use $recover-work-context to catch me up on the current verified state and next exact action for the payments migration.",
-    "indirect": "I am taking over this project and need the current verified state, what remains, what is blocked, and the next exact action",
-    "incomplete": "where did I leave off?",
-    "negative": "summarize my authored commits from the last three days into a status update",
-    "negative_expected": "what-did-i-get-done",
-    "collision": "pull the durable lessons from this finished session and route each to an artifact",
-    "collision_expected": "work-retrospective",
-    "edge": "the issue tracker and the branch disagree about what is done; I need the current verified state to resume"
-  },
-  {
-    "skill": "review-and-ship",
-    "direct": "Use $review-and-ship to take this ordinary branch to a merge-ready pull request.",
-    "indirect": "review this branch for bugs and regressions, run the focused tests, and open the pull request",
-    "incomplete": "ship this branch",
-    "negative": "land this stack of dependent pull requests one at a time",
-    "negative_expected": "integrate-pr-stack",
-    "collision": "independently challenge this diff for correctness and security before it ships",
-    "collision_expected": "adversarial-review",
-    "edge": "the diff is large; split the review across parallel subagents, then open the pull request"
-  },
-  {
-    "skill": "ship-one-outcome",
-    "direct": "Use $ship-one-outcome to take this authorized outcome through integration and a verified pull request.",
-    "indirect": "own this bounded delivery end to end, prove the real user path, get the worker changes actually integrated, and stop at a reviewable pull request",
-    "incomplete": "deliver this outcome to its stated boundary",
-    "negative": "review this ordinary branch, run focused tests, and open the pull request when it is clean",
-    "negative_expected": "review-and-ship",
-    "collision": "the build check is red; read the logs and apply the smallest repair",
-    "collision_expected": "fix-ci",
-    "edge": "a cancelled worker left uncommitted code; preserve it, prove the changes are in the integration revision, and leave the independent review pending"
-  },
-  {
-    "skill": "run-smoke-tests",
-    "direct": "Use $run-smoke-tests to run the existing smoke suite and report failures without editing code.",
-    "indirect": "Before merge, exercise the project's existing end-to-end smoke tests and show me the traces for failures.",
-    "incomplete": "run the smoke tests",
-    "negative": "run the compiler and type-check commands and summarize the failures by file",
-    "negative_expected": "check-compiler-errors",
-    "collision": "verify the checkout flow in a real browser with screenshots and console evidence, not just the existing suite",
-    "collision_expected": "verify-ui",
-    "edge": "the smoke suite is red; diagnose the failure but do not change product or test code"
-  },
-  {
-    "skill": "trace-artifact-provenance",
-    "direct": "Use $trace-artifact-provenance to prove the deployed container image matches commit 9f2c1a.",
-    "indirect": "where did this release archive come from, and which build produced the digest we deployed?",
-    "incomplete": "where did this artifact come from?",
-    "negative": "does the approval from two commits ago still cover the current PR head?",
-    "negative_expected": "certify-pr-head",
-    "collision": "run the complete release gate across code, runtime, and the end-user path",
-    "collision_expected": "certify-release",
-    "edge": "the Vercel deployment is live but I need a checksum-pinned manifest linking it to a source commit"
-  },
-  {
-    "skill": "understand-codebase",
-    "direct": "Use $understand-codebase to walk me through the auth middleware entry points, data flow, and state ownership.",
-    "indirect": "give me a mental model of this subsystem: entry points, data flow, state ownership, and where a new change belongs",
-    "incomplete": "how does this work?",
-    "negative": "why was this retry limit chosen? check the history and PRs",
-    "negative_expected": "recover-design-rationale",
-    "collision": "design the target architecture and migration path for replacing this subsystem",
-    "collision_expected": "design-architecture",
-    "edge": "I am about to add a feature and need to know which module owns this state and where the subsystem boundary is"
-  },
-  {
-    "skill": "verify-cli",
-    "direct": "Use $verify-cli to check the new prompt flow, including Ctrl-C and terminal resize.",
-    "indirect": "the interactive installer hangs when the terminal is resized; reproduce it with a real PTY and capture the transcript",
-    "incomplete": "check the CLI behavior in a real terminal, including exit codes",
-    "negative": "verify the checkout page in a real browser with screenshots and console logs",
-    "negative_expected": "verify-ui",
-    "collision": "prove this one falsifiable claim about the command line with a baseline and treatment comparison",
-    "collision_expected": "verify-this",
-    "edge": "the startup regression only appears when stdin is a TTY, not under the test harness"
-  },
-  {
-    "skill": "verify-ui",
-    "direct": "Use $verify-ui to reproduce the modal focus bug with a real browser and an accessibility snapshot.",
-    "indirect": "the layout only breaks after scrolling on mobile; capture screenshots, console logs, and a browser trace",
-    "incomplete": "check the UI behavior in a real browser",
-    "negative": "the interactive prompt hangs when I press Ctrl-C; reproduce it in a PTY",
-    "negative_expected": "verify-cli",
-    "collision": "run the existing end-to-end suite and isolate the failing spec",
-    "collision_expected": "run-smoke-tests",
-    "edge": "the bug only appears with real keyboard focus and scrolling in Electron, not in jsdom"
-  },
-  {
-    "skill": "work-retrospective",
-    "direct": "Use $work-retrospective to reflect on this session and route each lesson to an artifact.",
-    "indirect": "we just finished; what should we learn from this and how do we avoid repeating it next time?",
-    "incomplete": "run a retrospective on this session and find the durable lessons",
-    "negative": "mine the last six months for recurring friction worth encoding",
-    "negative_expected": "mine-work-patterns",
-    "collision": "summarize my commits for the week grouped into bug fixes, tech debt, and net-new work",
-    "collision_expected": "weekly-review",
-    "edge": "this session had a one-off mistake, so I do not want a new skill; is there anything durable to route?"
-  },
-  {
-    "skill": "blast-radius",
-    "direct": "Use $blast-radius to find what this change could break elsewhere before it ships.",
-    "indirect": "what else in the app could this refactor break once it merges?",
-    "incomplete": "what could this break?",
-    "negative": "independently challenge this payment change for correctness and security",
-    "negative_expected": "adversarial-review",
-    "collision": "review this ordinary branch, run focused tests, and open the PR when it is clean",
-    "collision_expected": "review-and-ship",
-    "edge": "the change already merged; I still want the downstream impact mapped with proof for each safe fact"
-  },
-  {
-    "skill": "fix-merge-conflicts",
-    "direct": "Use $fix-merge-conflicts to resolve these merge conflicts non-interactively.",
-    "indirect": "this rebase left conflicts in three files; keep both sides where safe and regenerate the lockfile",
-    "incomplete": "resolve the conflicts",
-    "negative": "watch the PR checks and iterate on failures until all required checks are green",
-    "negative_expected": "loop-on-ci",
-    "collision": "create a focused branch from the default branch and open a concise pull request",
-    "collision_expected": "new-branch-and-pr",
-    "edge": "both sides of the conflict are wrong; preserve neither verbatim but merge the intent and validate"
-  },
-  {
-    "skill": "get-pr-comments",
-    "direct": "Use $get-pr-comments to summarize the review comments on the active pull request.",
-    "indirect": "what exactly did reviewers ask for on this PR? group it by severity with an action list",
-    "incomplete": "what did reviewers say?",
-    "negative": "prepare this pull request for review by cleaning noisy history and improving the description",
-    "negative_expected": "make-pr-easy-to-review",
-    "collision": "independently challenge this completed change for correctness, security, and maintainability",
-    "collision_expected": "adversarial-review",
-    "edge": "the PR has no comments yet; report that plainly instead of inventing findings"
-  },
-  {
-    "skill": "tdd",
-    "direct": "Use $tdd to build this change from a failing test.",
-    "indirect": "write the failing test first, then the smallest implementation that turns it green",
-    "incomplete": "tdd this",
-    "negative": "run the existing smoke suite and report the failures",
-    "negative_expected": "run-smoke-tests",
-    "collision": "test behavior not implementation when you write the test",
-    "collision_expected": "principle-test-behavior-not-implementation",
-    "edge": "the bug has no cheap local test target; skip TDD and fix directly with a regression test after"
-  },
-  {
-    "skill": "technical-writing",
-    "direct": "Use $technical-writing to tighten this RFC's structure and prose.",
-    "indirect": "restructure this design doc so the tutorial, how-to, reference, and explanation are clearly separated",
-    "incomplete": "improve this doc",
-    "negative": "remove the AI tells and em dashes from this paragraph",
-    "negative_expected": "unslop",
-    "collision": "cut the filler transitions and hedging from this prose",
-    "collision_expected": "unslop",
-    "edge": "the doc is already clean; say so instead of inventing changes"
-  },
-  {
-    "skill": "typescript-best-practices",
-    "direct": "Use $typescript-best-practices when editing these .ts files.",
-    "indirect": "review this discriminated union choice and make the illegal states unrepresentable",
-    "incomplete": "check my typescript",
-    "negative": "verify the CLI behavior with real command execution and terminal evidence",
-    "negative_expected": "verify-cli",
-    "collision": "apply the type system discipline principle to this signature",
-    "collision_expected": "principle-type-system-discipline",
-    "edge": "the file is plain JavaScript; say the skill does not apply instead of forcing TypeScript rules"
-  },
-  {
-    "skill": "unslop",
-    "direct": "Use $unslop to strip the AI tells from this text.",
-    "indirect": "remove the em dashes, forced triads, and chatbot phrases from this prose",
-    "incomplete": "clean up this writing",
-    "negative": "remove the defensive checks and any-casts from this diff",
-    "negative_expected": "deslop",
-    "collision": "restructure this RFC so the explanation and reference sections are clearly separated",
-    "collision_expected": "technical-writing",
-    "edge": "the prose already follows the style; return it unchanged"
-  },
-  {
-    "skill": "verify-this",
-    "direct": "Use $verify-this to check this claim with fresh local evidence.",
-    "indirect": "restate this claim falsifiably, capture a baseline, and tell me VERIFIED or NOT VERIFIED",
-    "incomplete": "is this true?",
-    "negative": "verify the web UI behavior with real browser evidence and screenshots",
-    "negative_expected": "verify-ui",
-    "collision": "prove it works by running the feature and reading the actual value",
-    "collision_expected": "principle-prove-it-works",
-    "edge": "the claim is not falsifiable as stated; say so instead of fabricating a test"
-  },
-  {
-    "skill": "weekly-review",
-    "direct": "Use $weekly-review to synthesize this week's authored commits into highlights.",
-    "indirect": "group my commits from last week into a few highlights and classify them as fixes, debt, or new work",
-    "incomplete": "weekly recap",
-    "negative": "summarize what I got done yesterday into a short status update",
-    "negative_expected": "what-did-i-get-done",
-    "collision": "review this completed work session and route each durable lesson to the right artifact",
-    "collision_expected": "work-retrospective",
-    "edge": "I authored no commits this week; report an empty synthesis rather than padding"
-  },
-  {
-    "skill": "what-did-i-get-done",
-    "direct": "Use $what-did-i-get-done to summarize my commits from the last three days.",
-    "indirect": "give me a short high-signal update of what I shipped yesterday, excluding merges",
-    "incomplete": "what did I do?",
-    "negative": "produce a classified weekly synthesis of my commits grouped into highlights",
-    "negative_expected": "weekly-review",
-    "collision": "reconstruct the current state of this ongoing work so I can resume without re-reading everything",
-    "collision_expected": "recover-work-context",
-    "edge": "the window contains only merge commits; say there is nothing to summarize"
   },
   {
     "skill": "principle-attack-the-premise",
@@ -735,5 +537,214 @@
     "collision": "get the core data structures right before writing the logic",
     "collision_expected": "principle-foundational-thinking",
     "edge": "the language is dynamically typed; the discipline does not apply"
+  },
+  {
+    "skill": "reconcile-project-truth",
+    "direct": "Use $reconcile-project-truth to settle why the tracker says shipped but the deploy says otherwise.",
+    "indirect": "our docs, CI, and deployment disagree about what actually shipped; resolve each claim against its authoritative source",
+    "incomplete": "which source is right about what is deployed?",
+    "negative": "catch me up on where I left off so I can resume",
+    "negative_expected": "recover-work-context",
+    "collision": "trace the artifact digest back to the source commit that produced it",
+    "collision_expected": "trace-artifact-provenance",
+    "edge": "GitHub says the PR merged, CI says the check passed, and production still serves the old build"
+  },
+  {
+    "skill": "record-evidence",
+    "direct": "Use $record-evidence to keep an append-only TSV ledger for tonight's autonomous run.",
+    "indirect": "this multi-phase run will be unattended; keep one row per decision with evidence pointers so I can trust it later",
+    "incomplete": "keep a running log of each decision and its evidence pointer",
+    "negative": "design the auditable investigation plan and hypothesis loop first",
+    "negative_expected": "design-investigation",
+    "collision": "reconstruct the current state of this ongoing work so I can resume it",
+    "collision_expected": "recover-work-context",
+    "edge": "several agents are working in parallel and a reviewer will need the decision trail with base and head SHAs"
+  },
+  {
+    "skill": "recover-design-rationale",
+    "direct": "Use $recover-design-rationale to find out why this timeout threshold is 30 seconds.",
+    "indirect": "why is this retry limit set the way it is? dig through the PRs, issues, and incident records and classify what is proven versus inferred",
+    "incomplete": "why does this threshold have its current value, and what history shaped it?",
+    "negative": "walk me through how this subsystem works and where a new change belongs",
+    "negative_expected": "understand-codebase",
+    "collision": "reconstruct where the ongoing migration work left off so I can resume it",
+    "collision_expected": "recover-work-context",
+    "edge": "the code says one thing, the commit message says another, and there is no PR; give me what is actually proven"
+  },
+  {
+    "skill": "recover-work-context",
+    "direct": "Use $recover-work-context to catch me up on the current verified state and next exact action for the payments migration.",
+    "indirect": "I am taking over this project and need the current verified state, what remains, what is blocked, and the next exact action",
+    "incomplete": "where did I leave off?",
+    "negative": "summarize my authored commits from the last three days into a status update",
+    "negative_expected": "what-did-i-get-done",
+    "collision": "pull the durable lessons from this finished session and route each to an artifact",
+    "collision_expected": "work-retrospective",
+    "edge": "the issue tracker and the branch disagree about what is done; I need the current verified state to resume"
+  },
+  {
+    "skill": "review-and-ship",
+    "direct": "Use $review-and-ship to take this ordinary branch to a merge-ready pull request.",
+    "indirect": "review this branch for bugs and regressions, run the focused tests, and open the pull request",
+    "incomplete": "ship this branch",
+    "negative": "land this stack of dependent pull requests one at a time",
+    "negative_expected": "integrate-pr-stack",
+    "collision": "independently challenge this diff for correctness and security before it ships",
+    "collision_expected": "adversarial-review",
+    "edge": "the diff is large; split the review across parallel subagents, then open the pull request"
+  },
+  {
+    "skill": "run-smoke-tests",
+    "direct": "Use $run-smoke-tests to run the existing smoke suite and report failures without editing code.",
+    "indirect": "Before merge, exercise the project's existing end-to-end smoke tests and show me the traces for failures.",
+    "incomplete": "run the smoke tests",
+    "negative": "run the compiler and type-check commands and summarize the failures by file",
+    "negative_expected": "check-compiler-errors",
+    "collision": "verify the checkout flow in a real browser with screenshots and console evidence, not just the existing suite",
+    "collision_expected": "verify-ui",
+    "edge": "the smoke suite is red; diagnose the failure but do not change product or test code"
+  },
+  {
+    "skill": "ship-one-outcome",
+    "direct": "Use $ship-one-outcome to take this authorized outcome through integration and a verified pull request.",
+    "indirect": "own this bounded delivery end to end, prove the real user path, get the worker changes actually integrated, and stop at a reviewable pull request",
+    "incomplete": "deliver this outcome to its stated boundary",
+    "negative": "review this ordinary branch, run focused tests, and open the pull request when it is clean",
+    "negative_expected": "review-and-ship",
+    "collision": "the build check is red; read the logs and apply the smallest repair",
+    "collision_expected": "fix-ci",
+    "edge": "a cancelled worker left uncommitted code; preserve it, prove the changes are in the integration revision, and leave the independent review pending"
+  },
+  {
+    "skill": "tdd",
+    "direct": "Use $tdd to build this change from a failing test.",
+    "indirect": "write the failing test first, then the smallest implementation that turns it green",
+    "incomplete": "tdd this",
+    "negative": "run the existing smoke suite and report the failures",
+    "negative_expected": "run-smoke-tests",
+    "collision": "test behavior not implementation when you write the test",
+    "collision_expected": "principle-test-behavior-not-implementation",
+    "edge": "the bug has no cheap local test target; skip TDD and fix directly with a regression test after"
+  },
+  {
+    "skill": "technical-writing",
+    "direct": "Use $technical-writing to tighten this RFC's structure and prose.",
+    "indirect": "restructure this design doc so the tutorial, how-to, reference, and explanation are clearly separated",
+    "incomplete": "improve this doc",
+    "negative": "remove the AI tells and em dashes from this paragraph",
+    "negative_expected": "unslop",
+    "collision": "cut the filler transitions and hedging from this prose",
+    "collision_expected": "unslop",
+    "edge": "the doc is already clean; say so instead of inventing changes"
+  },
+  {
+    "skill": "trace-artifact-provenance",
+    "direct": "Use $trace-artifact-provenance to prove the deployed container image matches commit 9f2c1a.",
+    "indirect": "where did this release archive come from, and which build produced the digest we deployed?",
+    "incomplete": "where did this artifact come from?",
+    "negative": "does the approval from two commits ago still cover the current PR head?",
+    "negative_expected": "certify-pr-head",
+    "collision": "run the complete release gate across code, runtime, and the end-user path",
+    "collision_expected": "certify-release",
+    "edge": "the Vercel deployment is live but I need a checksum-pinned manifest linking it to a source commit"
+  },
+  {
+    "skill": "typescript-best-practices",
+    "direct": "Use $typescript-best-practices when editing these .ts files.",
+    "indirect": "review this discriminated union choice and make the illegal states unrepresentable",
+    "incomplete": "check my typescript",
+    "negative": "verify the CLI behavior with real command execution and terminal evidence",
+    "negative_expected": "verify-cli",
+    "collision": "apply the type system discipline principle to this signature",
+    "collision_expected": "principle-type-system-discipline",
+    "edge": "the file is plain JavaScript; say the skill does not apply instead of forcing TypeScript rules"
+  },
+  {
+    "skill": "understand-codebase",
+    "direct": "Use $understand-codebase to walk me through the auth middleware entry points, data flow, and state ownership.",
+    "indirect": "give me a mental model of this subsystem: entry points, data flow, state ownership, and where a new change belongs",
+    "incomplete": "how does this work?",
+    "negative": "why was this retry limit chosen? check the history and PRs",
+    "negative_expected": "recover-design-rationale",
+    "collision": "design the target architecture and migration path for replacing this subsystem",
+    "collision_expected": "design-architecture",
+    "edge": "I am about to add a feature and need to know which module owns this state and where the subsystem boundary is"
+  },
+  {
+    "skill": "unslop",
+    "direct": "Use $unslop to strip the AI tells from this text.",
+    "indirect": "remove the em dashes, forced triads, and chatbot phrases from this prose",
+    "incomplete": "clean up this writing",
+    "negative": "remove the defensive checks and any-casts from this diff",
+    "negative_expected": "deslop",
+    "collision": "restructure this RFC so the explanation and reference sections are clearly separated",
+    "collision_expected": "technical-writing",
+    "edge": "the prose already follows the style; return it unchanged"
+  },
+  {
+    "skill": "verify-cli",
+    "direct": "Use $verify-cli to check the new prompt flow, including Ctrl-C and terminal resize.",
+    "indirect": "the interactive installer hangs when the terminal is resized; reproduce it with a real PTY and capture the transcript",
+    "incomplete": "check the CLI behavior in a real terminal, including exit codes",
+    "negative": "verify the checkout page in a real browser with screenshots and console logs",
+    "negative_expected": "verify-ui",
+    "collision": "prove this one falsifiable claim about the command line with a baseline and treatment comparison",
+    "collision_expected": "verify-this",
+    "edge": "the startup regression only appears when stdin is a TTY, not under the test harness"
+  },
+  {
+    "skill": "verify-this",
+    "direct": "Use $verify-this to check this claim with fresh local evidence.",
+    "indirect": "restate this claim falsifiably, capture a baseline, and tell me VERIFIED or NOT VERIFIED",
+    "incomplete": "is this true?",
+    "negative": "verify the web UI behavior with real browser evidence and screenshots",
+    "negative_expected": "verify-ui",
+    "collision": "prove it works by running the feature and reading the actual value",
+    "collision_expected": "principle-prove-it-works",
+    "edge": "the claim is not falsifiable as stated; say so instead of fabricating a test"
+  },
+  {
+    "skill": "verify-ui",
+    "direct": "Use $verify-ui to reproduce the modal focus bug with a real browser and an accessibility snapshot.",
+    "indirect": "the layout only breaks after scrolling on mobile; capture screenshots, console logs, and a browser trace",
+    "incomplete": "check the UI behavior in a real browser",
+    "negative": "the interactive prompt hangs when I press Ctrl-C; reproduce it in a PTY",
+    "negative_expected": "verify-cli",
+    "collision": "run the existing end-to-end suite and isolate the failing spec",
+    "collision_expected": "run-smoke-tests",
+    "edge": "the bug only appears with real keyboard focus and scrolling in Electron, not in jsdom"
+  },
+  {
+    "skill": "weekly-review",
+    "direct": "Use $weekly-review to synthesize this week's authored commits into highlights.",
+    "indirect": "group my commits from last week into a few highlights and classify them as fixes, debt, or new work",
+    "incomplete": "weekly recap",
+    "negative": "summarize what I got done yesterday into a short status update",
+    "negative_expected": "what-did-i-get-done",
+    "collision": "review this completed work session and route each durable lesson to the right artifact",
+    "collision_expected": "work-retrospective",
+    "edge": "I authored no commits this week; report an empty synthesis rather than padding"
+  },
+  {
+    "skill": "what-did-i-get-done",
+    "direct": "Use $what-did-i-get-done to summarize my commits from the last three days.",
+    "indirect": "give me a short high-signal update of what I shipped yesterday, excluding merges",
+    "incomplete": "what did I do?",
+    "negative": "produce a classified weekly synthesis of my commits grouped into highlights",
+    "negative_expected": "weekly-review",
+    "collision": "reconstruct the current state of this ongoing work so I can resume without re-reading everything",
+    "collision_expected": "recover-work-context",
+    "edge": "the window contains only merge commits; say there is nothing to summarize"
+  },
+  {
+    "skill": "work-retrospective",
+    "direct": "Use $work-retrospective to reflect on this session and route each lesson to an artifact.",
+    "indirect": "we just finished; what should we learn from this and how do we avoid repeating it next time?",
+    "incomplete": "run a retrospective on this session and find the durable lessons",
+    "negative": "mine the last six months for recurring friction worth encoding",
+    "negative_expected": "mine-work-patterns",
+    "collision": "summarize my commits for the week grouped into bug fixes, tech debt, and net-new work",
+    "collision_expected": "weekly-review",
+    "edge": "this session had a one-off mistake, so I do not want a new skill; is there anything durable to route?"
   }
 ]

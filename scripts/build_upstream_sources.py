@@ -96,6 +96,7 @@ ADAPTED: dict[str, list[tuple[str, str]]] = {
 }
 
 ORIGINAL = [
+    "acceptance-source-accept006",
     "preflight-repository",
     "build-execution-contract",
     "certify-pr-head",

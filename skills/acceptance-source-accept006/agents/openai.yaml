@@ -1,0 +1,4 @@
+interface:
+  display_name: "Source Acceptance Skill"
+  short_description: "Acceptance workflow for source manager review"
+  default_prompt: "Use $acceptance-source-accept006 to review this acceptance workflow."
