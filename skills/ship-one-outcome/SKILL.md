@@ -1,6 +1,6 @@
 ---
 name: ship-one-outcome
-description: "Coordinate one bounded software delivery from an authorized outcome to its stated finish boundary: recovery, thin-path proof, integration, verification, and authorized merge, deployment, or acceptance. Use when a mission spans implementation through delivery evidence, or when a worker's completion claim must be proven integrated. Not for a single small edit, standalone PR review, CI repair, or investigation; use the narrower specialist skill."
+description: "\"Coordinate one bounded software delivery from an authorized outcome to its stated finish boundary: recovery, thin-path proof, integration, verification, and authorized merge, deployment, or acceptance. Use when a mission spans implementation through delivery evidence, or when a worker's completion claim must be proven integrated. Not for a single small edit, standalone PR review, CI repair, or investigation; use the narrower specialist skill.\""
 ---
 
 # Ship One Outcome
