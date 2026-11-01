@@ -26,6 +26,11 @@ SKILLS_DIR = REPO_ROOT / "skills"
 
 # name -> (display_name, short_description, default_prompt)
 METADATA: dict[str, tuple[str, str, str]] = {
+    "acceptance-source-accept007": (
+        "Source Acceptance Skill",
+        "Acceptance workflow for source manager review",
+        "Use $acceptance-source-accept007 to review this acceptance workflow.",
+    ),
     # --- copied: pstack ---
     "blast-radius": (
         "Blast Radius",

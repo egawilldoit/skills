@@ -1,0 +1,5 @@
+schema_version: 1
+triggers:
+  - "acceptance acceptance-source-accept007"
+anti_triggers:
+  - "production release"

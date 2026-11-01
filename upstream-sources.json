@@ -4,6 +4,10 @@
   "generated_by": "scripts/build_upstream_sources.py",
   "sources": [
     {
+      "skill": "acceptance-source-accept007",
+      "mode": "original"
+    },
+    {
       "skill": "adversarial-review",
       "origin": "cursor/plugins",
       "source_skill": "interrogate",
