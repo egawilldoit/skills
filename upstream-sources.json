@@ -426,10 +426,6 @@
       "mode": "adapted"
     },
     {
-      "skill": "ship-one-outcome",
-      "mode": "original"
-    },
-    {
       "skill": "tdd",
       "origin": "cursor/plugins",
       "source_path": "pstack/skills/tdd",
