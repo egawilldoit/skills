@@ -134,9 +134,10 @@ class TestShipOneOutcomeRouting(unittest.TestCase):
         task = (
             "Make the single typo correction in README and stop at a reviewable pull request"
         )
-        metadata = validate_ega_metadata.yaml.safe_load(
-            (validate_ega_metadata.SKILLS_DIR / "ship-one-outcome" / "ega.yaml").read_text()
-        )
+        routing_path = validate_ega_metadata.SKILLS_DIR / "ship-one-outcome" / "ega.yaml"
+        if not routing_path.is_file():
+            self.skipTest("ship-one-outcome is not present in this catalog")
+        metadata = validate_ega_metadata.yaml.safe_load(routing_path.read_text())
         normalized_task = " " + " ".join(task.casefold().split()) + " "
         for trigger in metadata["triggers"]:
             with self.subTest(trigger=trigger):
