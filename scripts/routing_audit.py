@@ -35,38 +35,9 @@ STOPWORDS = {
     "skill", "skills", "one", "two", "all", "any", "each", "more", "most",
 }
 
-CLUSTERS: dict[str, list[str]] = {
-    "verification": [
-        "verify-this", "verify-ui", "verify-cli", "certify-pr-head",
-        "certify-release", "certify-production-target", "certify-database-rollout",
-        "certify-mcp-production", "trace-artifact-provenance",
-    ],
-    "review": [
-        "blast-radius", "adversarial-review", "review-and-ship",
-        "make-pr-easy-to-review",
-    ],
-    "understanding_design": [
-        "understand-codebase", "recover-design-rationale", "design-architecture",
-        "compare-designs",
-    ],
-    "context_learning": [
-        "recover-work-context", "work-retrospective", "mine-work-patterns",
-        "what-did-i-get-done", "weekly-review",
-    ],
-    "pr_ci": [
-        "review-and-ship", "loop-on-ci", "fix-ci", "get-pr-comments",
-        "fix-merge-conflicts", "new-branch-and-pr", "integrate-pr-stack",
-        "make-pr-easy-to-review",
-    ],
-    "repo_state": [
-        "preflight-repository", "reconcile-project-truth", "recover-work-context",
-        "record-evidence", "build-execution-contract",
-    ],
-    "verification_harness": [
-        "create-verification-workflow", "maintain-verification-workflow",
-        "run-smoke-tests", "verify-ui", "verify-cli",
-    ],
-}
+# The active catalog is empty; at-risk routing clusters are declared when
+# skills are added. The overlap check stays active for every declared cluster.
+CLUSTERS: dict[str, list[str]] = {}
 
 
 def load_description(name: str) -> str:
