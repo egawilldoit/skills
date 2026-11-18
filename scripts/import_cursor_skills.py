@@ -40,65 +40,14 @@ SOURCE_COMMIT = "12d587dfb20741cafc376c42c696c5f6e2a64487"
 PSTACK = "pstack/skills"
 TEAM_KIT = "cursor-team-kit/skills"
 
-# Cross-skill reference remapping. Keys are upstream skill names that appear
-# backticked in copied bodies; values are the catalog skill that replaced them.
-REFERENCE_MAP = {
-    "how": "understand-codebase",
-    "why": "recover-design-rationale",
-    "architect": "design-architecture",
-    "arena": "compare-designs",
-    "interrogate": "adversarial-review",
-    "recall": "recover-work-context",
-    "reflect": "work-retrospective",
-    "automate-me": "mine-work-patterns",
-    "workflow-from-chats": "mine-work-patterns",
-    "show-me-your-work": "record-evidence",
-    "create-verification-skill": "create-verification-workflow",
-    "maintain-verification-skill": "maintain-verification-workflow",
-    "swarm": "parallelize-work",
-    "figure-it-out": "design-investigation",
-    "poteto-mode": "deliver-software",
-    "control-ui": "verify-ui",
-    "control-cli": "verify-cli",
-}
+# The active catalog is empty. Restore remapping and import entries only
+# when adding a copied skill from the pinned upstream; they must describe
+# skills that actually exist in skills/. Historical tables remain in Git
+# history.
+REFERENCE_MAP: dict[str, str] = {}
 
 # skill name -> source path (relative to the source repo root)
-COPY_SKILLS = {
-    # pstack
-    "blast-radius": f"{PSTACK}/blast-radius",
-    "tdd": f"{PSTACK}/tdd",
-    "technical-writing": f"{PSTACK}/technical-writing",
-    "typescript-best-practices": f"{PSTACK}/typescript-best-practices",
-    "unslop": f"{PSTACK}/unslop",
-    "principle-attack-the-premise": f"{PSTACK}/principle-attack-the-premise",
-    "principle-boundary-discipline": f"{PSTACK}/principle-boundary-discipline",
-    "principle-build-the-lever": f"{PSTACK}/principle-build-the-lever",
-    "principle-encode-lessons-in-structure": f"{PSTACK}/principle-encode-lessons-in-structure",
-    "principle-exhaust-the-design-space": f"{PSTACK}/principle-exhaust-the-design-space",
-    "principle-experience-first": f"{PSTACK}/principle-experience-first",
-    "principle-fix-root-causes": f"{PSTACK}/principle-fix-root-causes",
-    "principle-foundational-thinking": f"{PSTACK}/principle-foundational-thinking",
-    "principle-guard-the-context-window": f"{PSTACK}/principle-guard-the-context-window",
-    "principle-laziness-protocol": f"{PSTACK}/principle-laziness-protocol",
-    "principle-make-operations-idempotent": f"{PSTACK}/principle-make-operations-idempotent",
-    "principle-migrate-callers-then-delete-legacy-apis": f"{PSTACK}/principle-migrate-callers-then-delete-legacy-apis",
-    "principle-minimize-reader-load": f"{PSTACK}/principle-minimize-reader-load",
-    "principle-model-the-domain": f"{PSTACK}/principle-model-the-domain",
-    "principle-outcome-oriented-execution": f"{PSTACK}/principle-outcome-oriented-execution",
-    "principle-prove-it-works": f"{PSTACK}/principle-prove-it-works",
-    "principle-redesign-from-first-principles": f"{PSTACK}/principle-redesign-from-first-principles",
-    "principle-separate-before-serializing-shared-state": f"{PSTACK}/principle-separate-before-serializing-shared-state",
-    "principle-sequence-verifiable-units": f"{PSTACK}/principle-sequence-verifiable-units",
-    "principle-subtract-before-you-add": f"{PSTACK}/principle-subtract-before-you-add",
-    "principle-test-behavior-not-implementation": f"{PSTACK}/principle-test-behavior-not-implementation",
-    "principle-type-system-discipline": f"{PSTACK}/principle-type-system-discipline",
-    # cursor-team-kit
-    "verify-this": f"{TEAM_KIT}/verify-this",
-    "get-pr-comments": f"{TEAM_KIT}/get-pr-comments",
-    "fix-merge-conflicts": f"{TEAM_KIT}/fix-merge-conflicts",
-    "what-did-i-get-done": f"{TEAM_KIT}/what-did-i-get-done",
-    "weekly-review": f"{TEAM_KIT}/weekly-review",
-}
+COPY_SKILLS: dict[str, str] = {}
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n?", re.DOTALL)
 

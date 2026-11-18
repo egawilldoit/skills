@@ -21,6 +21,9 @@ Checks per skill:
 Catalog-level check:
   * every skill in the catalog has a valid ega.yaml
 
+An empty catalog is valid. The per-skill checks remain active for any skill
+that is added later; malformed metadata still fails.
+
 Usage:
     python3 scripts/validate_ega_metadata.py
 """

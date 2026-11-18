@@ -1,6 +1,6 @@
 # Operating contract
 
-Shared vocabulary for this catalog's owned skills. It exists so skills can
+Shared vocabulary for skills added to this catalog. It exists so skills can
 state facts precisely instead of writing long prose. Copy it into a skill's
 `references/` folder when that skill relies on these terms.
 
@@ -121,6 +121,6 @@ it instead of acting. Read-only inspection never needs authority.
 
 ## Reporting
 
-Every owned skill that reports a verdict should return one of the defined
+Every skill that reports a verdict should return one of the defined
 labels, the evidence level it reached, and the exact next action. Prefer a
 short, checkable statement over a narrative.
