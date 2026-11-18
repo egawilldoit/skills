@@ -16,6 +16,12 @@ An empty catalog with an empty trigger-cases.json is valid. Structural checks
 still fail if a case names an unknown skill, omits a required field, or if a
 catalog skill has no case.
 
+`negative_expected` and `collision_expected` may be a JSON null. That is the
+explicit "no competing skill exists" sentinel used by the first skill. With
+null, the negative/collision example must still contain at least three content
+words and must not describe the target skill itself. A named neighbor must be
+a catalog skill; null stays valid when later skills are added.
+
 Usage:
     python3 scripts/trigger_audit.py [--margin 0.20]
 """
@@ -45,8 +51,8 @@ STOPWORDS = {
     "want", "still", "just", "about", "has", "have", "was", "were", "am",
 }
 
-FIELDS = ("direct", "indirect", "incomplete", "negative", "negative_expected",
-          "collision", "collision_expected", "edge")
+TEXT_FIELDS = ("direct", "indirect", "incomplete", "negative", "collision", "edge")
+NEIGHBOR_FIELDS = ("negative_expected", "collision_expected")
 POSITIVE_FIELDS = ("direct", "indirect", "incomplete", "edge")
 
 
@@ -115,12 +121,23 @@ def main() -> int:
         if skill not in descriptions:
             errors.append(f"{skill}: unknown target skill")
             continue
-        for field in FIELDS:
+        for field in TEXT_FIELDS:
             if not isinstance(case.get(field), str) or not case[field].strip():
                 errors.append(f"{skill}: missing or empty field '{field}'")
-        for field in ("negative_expected", "collision_expected"):
-            if case.get(field) not in descriptions:
-                errors.append(f"{skill}: '{case.get(field)}' is not a catalog skill")
+        for field, example in (("negative_expected", "negative"), ("collision_expected", "collision")):
+            expected = case.get(field)
+            if expected is None:
+                # Explicit no-neighbor sentinel: the example must still be a
+                # meaningful request for something other than the target.
+                example_text = case.get(example, "")
+                if len(content_tokens(example_text)) < 3:
+                    errors.append(f"{skill}.{example}: needs at least three content words when no competing skill exists")
+                elif score(example_text, descriptions[skill]) >= 0.5:
+                    errors.append(f"{skill}.{example}: describes the target skill but declares no competing skill")
+            elif not isinstance(expected, str) or not expected.strip():
+                errors.append(f"{skill}: field '{field}' must be a skill name or null")
+            elif expected not in descriptions:
+                errors.append(f"{skill}: '{expected}' is not a catalog skill")
         for field in POSITIVE_FIELDS:
             minimum = 1 if field == "incomplete" else 3
             if isinstance(case.get(field), str) and len(content_tokens(case[field])) < minimum:
