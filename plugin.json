@@ -34,9 +34,9 @@
         ],
         "websiteURL": "https://github.com/egawilldoit/skills",
         "defaultPrompt": [
-          "Route this engineering task with $deliver-software.",
-          "Understand how this subsystem works with $understand-codebase.",
-          "Certify this release with $certify-release."
+          "Show me the skills currently available in this catalog.",
+          "Help me add a new skill to this catalog using the documented workflow.",
+          "Run the catalog validation gates and report the results."
         ]
       }
     }

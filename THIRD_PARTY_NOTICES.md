@@ -1,7 +1,11 @@
 # Third-party notices
 
-This repository contains skills that are copied from, or adapted from, the
-Cursor plugins repository. The remainder are original works.
+This repository retains attribution for skills that were copied from, or
+adapted from, the Cursor plugins repository, and for original works authored
+here. The active catalog is currently empty: no skill listed below is present
+under `skills/`. These notices are kept because attribution survives removal
+from the active catalog; the former skill contents and per-skill provenance
+records remain recoverable from Git history.
 
 ## Upstream source
 
@@ -12,7 +16,10 @@ license:     MIT
 ```
 
 The exact source path, source commit, license, and import mode for every
-imported or adapted skill is recorded in `upstream-sources.json`.
+imported or adapted skill were recorded in `upstream-sources.json`. Its
+`sources` array is now empty to match the empty active catalog; the historical
+records are available in Git history. This file keeps the upstream license
+notices regardless of which skills are active.
 
 ## Import modes
 
@@ -25,7 +32,7 @@ adapted   studied upstream source, reimplemented platform-neutral
 Copied skills are the work of the original authors listed below. No authorship
 of unchanged upstream work is claimed here.
 
-## Copied skills
+## Copied skills (historical attribution)
 
 From `pstack/skills/` (author: Lauren Tan):
 
@@ -69,7 +76,7 @@ what-did-i-get-done
 weekly-review
 ```
 
-## Adapted skills
+## Adapted skills (historical attribution)
 
 Adapted skills reuse the problem definition, workflow shape, and decision
 rules of the upstream skill, but are reimplemented for a platform-neutral
