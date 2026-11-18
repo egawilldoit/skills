@@ -96,6 +96,18 @@ class TriggerAuditNeighborTests(unittest.TestCase):
         self.write_cases([case])
         self.assertEqual(self.run_main(), 1)
 
+    def test_omitted_negative_expected_fails(self):
+        case = base_case("first-skill")
+        del case["negative_expected"]
+        self.write_cases([case])
+        self.assertEqual(self.run_main(), 1)
+
+    def test_omitted_collision_expected_fails(self):
+        case = base_case("first-skill")
+        del case["collision_expected"]
+        self.write_cases([case])
+        self.assertEqual(self.run_main(), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

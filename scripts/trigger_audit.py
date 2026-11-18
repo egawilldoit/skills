@@ -125,7 +125,10 @@ def main() -> int:
             if not isinstance(case.get(field), str) or not case[field].strip():
                 errors.append(f"{skill}: missing or empty field '{field}'")
         for field, example in (("negative_expected", "negative"), ("collision_expected", "collision")):
-            expected = case.get(field)
+            if field not in case:
+                errors.append(f"{skill}: missing field '{field}'")
+                continue
+            expected = case[field]
             if expected is None:
                 # Explicit no-neighbor sentinel: the example must still be a
                 # meaningful request for something other than the target.
