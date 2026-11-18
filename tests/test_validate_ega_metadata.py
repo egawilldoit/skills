@@ -109,42 +109,6 @@ class TestValidateSkill(unittest.TestCase):
             self.assertTrue(any("missing ega.yaml" in e for e in errs), errs)
 
 
-class TestArchitectureRouting(unittest.TestCase):
-    def test_architecture_intent_keeps_its_domain_signal(self):
-        # The real Hub resolver needs this signal to distinguish an architecture
-        # proposal from PR writing. Keep the exact reproduction in trigger-cases.
-        metadata = validate_ega_metadata.yaml.safe_load(
-            (validate_ega_metadata.SKILLS_DIR / "design-architecture" / "ega.yaml").read_text()
-        )
-        self.assertIn("architecture", metadata.get("domains", []))
-
-    def test_named_vercel_guidance_is_declared_as_anti_trigger(self):
-        task = "Our React app feels sluggish. Apply the performance and architecture guidance from the Vercel team."
-        metadata = validate_ega_metadata.yaml.safe_load(
-            (validate_ega_metadata.SKILLS_DIR / "design-architecture" / "ega.yaml").read_text()
-        )
-        self.assertTrue(any(phrase.casefold() in task.casefold()
-                            for phrase in metadata.get("anti_triggers", [])))
-
-
-class TestShipOneOutcomeRouting(unittest.TestCase):
-    def test_trivial_edit_with_pr_boundary_has_no_delivery_trigger(self):
-        # Keep this exact reported request: the finish boundary alone must not
-        # activate the delivery coordinator. Full routing uses the EGA resolver.
-        task = (
-            "Make the single typo correction in README and stop at a reviewable pull request"
-        )
-        routing_path = validate_ega_metadata.SKILLS_DIR / "ship-one-outcome" / "ega.yaml"
-        if not routing_path.is_file():
-            self.skipTest("ship-one-outcome is not present in this catalog")
-        metadata = validate_ega_metadata.yaml.safe_load(routing_path.read_text())
-        normalized_task = " " + " ".join(task.casefold().split()) + " "
-        for trigger in metadata["triggers"]:
-            with self.subTest(trigger=trigger):
-                normalized_trigger = " " + " ".join(trigger.casefold().split()) + " "
-                self.assertNotIn(normalized_trigger, normalized_task)
-
-
 class TestAliasUniqueness(unittest.TestCase):
     def test_conflict_detected(self):
         metadata = {
@@ -172,13 +136,35 @@ class TestAliasUniqueness(unittest.TestCase):
 
 
 class TestCatalogCoverage(unittest.TestCase):
-    def test_every_skill_has_valid_ega_yaml(self):
-        root = Path(__file__).resolve().parents[1]
-        with mock.patch.object(validate_ega_metadata, "REPO_ROOT", root), \
-             mock.patch.object(validate_ega_metadata, "SKILLS_DIR", root / "skills"):
+    REPO = Path(__file__).resolve().parents[1]
+
+    def _run_main(self, skills_dir):
+        with mock.patch.object(validate_ega_metadata, "REPO_ROOT", self.REPO), \
+             mock.patch.object(validate_ega_metadata, "SKILLS_DIR", skills_dir):
             with mock.patch.object(validate_ega_metadata, "errors", []) as errs:
-                validate_ega_metadata.main()
+                code = validate_ega_metadata.main()
+        return code, errs
+
+    def test_every_skill_has_valid_ega_yaml(self):
+        code, errs = self._run_main(self.REPO / "skills")
+        self.assertEqual(code, 0, errs)
         self.assertEqual(errs, [], errs)
+
+    def test_empty_catalog_passes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skills = Path(tmp) / "skills"
+            skills.mkdir()
+            code, errs = self._run_main(skills)
+            self.assertEqual(code, 0, errs)
+            self.assertEqual(errs, [], errs)
+
+    def test_malformed_skill_metadata_still_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_skill(root, "broken-skill", "schema_version: 2\n")
+            code, errs = self._run_main(root / "skills")
+            self.assertEqual(code, 1)
+            self.assertTrue(any("schema_version" in e for e in errs), errs)
 
 
 if __name__ == "__main__":

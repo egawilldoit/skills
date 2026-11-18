@@ -67,16 +67,53 @@ class TestCombinedIdentity(unittest.TestCase):
 
 
 class TestLongestIdentity(unittest.TestCase):
-    def test_all_real_identities_within_limit(self):
-        manifest = json.loads((Path(__file__).resolve().parents[1] / "plugin.json").read_text())
+    def test_catalog_identities_within_limit(self):
+        repo = Path(__file__).resolve().parents[1]
+        manifest = json.loads((repo / "plugin.json").read_text())
         plugin = manifest["name"]
-        skills = sorted(p.name for p in
-                        (Path(__file__).resolve().parents[1] / "skills").iterdir()
-                        if p.is_dir())
+        skills = sorted(p.name for p in (repo / "skills").iterdir() if p.is_dir())
         identities = [f"{plugin}:{name}" for name in skills]
-        self.assertGreaterEqual(len(skills), 1, "the catalog must contain at least one skill")
+        # Zero skills is a valid catalog state; every identity that does exist
+        # must still fit the 64-character submission constraint.
         for identity in identities:
             self.assertLessEqual(len(identity), 64, identity)
+
+
+class TestCatalogIntegrity(unittest.TestCase):
+    REPO = Path(__file__).resolve().parents[1]
+
+    def _run_main(self, root, skills_dir):
+        with mock.patch.object(validate_catalog, "REPO_ROOT", root), \
+             mock.patch.object(validate_catalog, "SKILLS_DIR", skills_dir), \
+             mock.patch.object(validate_catalog, "errors", []) as errs, \
+             mock.patch.object(validate_catalog, "warnings", []):
+            return validate_catalog.main(), errs
+
+    def test_zero_skill_catalog_passes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skills = root / "skills"
+            skills.mkdir()
+            (root / "plugin.json").write_text((self.REPO / "plugin.json").read_text())
+            (root / "upstream-sources.json").write_text(
+                json.dumps({"sources": []})
+            )
+            code, errs = self._run_main(root, skills)
+            self.assertEqual(code, 0, errs)
+            self.assertEqual(errs, [], errs)
+
+    def test_stale_provenance_entry_fails_on_empty_catalog(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skills = root / "skills"
+            skills.mkdir()
+            (root / "plugin.json").write_text((self.REPO / "plugin.json").read_text())
+            (root / "upstream-sources.json").write_text(
+                json.dumps({"sources": [{"skill": "ghost", "mode": "original"}]})
+            )
+            code, errs = self._run_main(root, skills)
+            self.assertEqual(code, 1)
+            self.assertTrue(any("unknown entries" in e for e in errs), errs)
 
 
 if __name__ == "__main__":

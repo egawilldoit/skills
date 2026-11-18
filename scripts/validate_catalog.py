@@ -11,6 +11,10 @@ Checks:
   * no placeholders, TODOs, or Cursor-specific coupling
   * upstream-sources.json covers every skill exactly once
 
+An empty skills/ directory (zero skills) is a valid catalog state: the same
+checks still run, provenance must also be empty, and any malformed skill that
+is added later still fails validation.
+
 Usage:
     python3 scripts/validate_catalog.py
 """

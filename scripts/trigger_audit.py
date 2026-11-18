@@ -12,6 +12,10 @@ declared sibling than to the intended skill. Descriptions that name their
 neighbors on purpose create overlap, so a small number of informational flags
 is expected. Investigate a flag; do not treat it as proof of a routing bug.
 
+An empty catalog with an empty trigger-cases.json is valid. Structural checks
+still fail if a case names an unknown skill, omits a required field, or if a
+catalog skill has no case.
+
 Usage:
     python3 scripts/trigger_audit.py [--margin 0.20]
 """

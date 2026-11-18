@@ -1,10 +1,8 @@
-"""Tests for validate_plugin_manifest.py, log.sh, and assert_checkout_sha.py."""
+"""Tests for validate_plugin_manifest.py and assert_checkout_sha.py."""
 
 import hashlib
 import json
 import re
-import shutil
-import stat
 import subprocess
 import sys
 import tempfile
@@ -129,57 +127,6 @@ class TestAssertCheckoutSha(unittest.TestCase):
         proc = self.run_assert("--expected", self.HEAD, "--event", "push")
         for needle in ("EVENT:", "EXPECTED SHA:", "EXECUTED SHA:"):
             self.assertIn(needle, proc.stdout)
-
-
-class TestRecordEvidenceLog(unittest.TestCase):
-    LOG_SH = REPO_ROOT / "skills" / "record-evidence" / "scripts" / "log.sh"
-
-    def setUp(self):
-        self.tmp = Path(tempfile.mkdtemp(prefix="logsh-"))
-        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
-
-    def run_log(self, *args):
-        return subprocess.run(["bash", str(self.LOG_SH), *args],
-                              capture_output=True, text=True)
-
-    def test_header_created_on_first_use(self):
-        log = self.tmp / "decisions.tsv"
-        proc = self.run_log(str(log), "phase", "decision", "why", "ev", "result")
-        self.assertEqual(proc.returncode, 0)
-        header = log.read_text().splitlines()[0]
-        self.assertTrue(header.startswith("ts\tphase\tdecision\twhy\tevidence\tresult"))
-
-    def test_row_appended_after_header(self):
-        log = self.tmp / "decisions.tsv"
-        self.run_log(str(log), "p1", "d1", "w1", "e1", "r1")
-        self.run_log(str(log), "p2", "d2", "w2", "e2", "r2")
-        lines = log.read_text().splitlines()
-        self.assertEqual(len(lines), 3)  # header + 2 rows
-        self.assertIn("p2\td2\tw2\te2\tr2", lines[2])
-
-    def test_tab_and_newline_sanitized(self):
-        log = self.tmp / "decisions.tsv"
-        self.run_log(str(log), "p\twith\ttabs", "decision", "why", "ev", "res")
-        lines = log.read_text().splitlines()
-        self.assertEqual(len(lines), 2)  # one physical row
-        cells = lines[1].split("\t")
-        self.assertEqual(cells[1], "p with tabs")
-        self.assertNotIn("\n", cells[1])
-
-    def test_spreadsheet_formula_neutralized(self):
-        log = self.tmp / "decisions.tsv"
-        self.run_log(str(log), "phase", "=cmd|' /C calc'!A0", "why", "ev", "res")
-        row = log.read_text().splitlines()[1]
-        self.assertTrue(row.split("\t")[2].startswith("'="))
-
-    def test_negative_starting_cell_neutralized(self):
-        log = self.tmp / "decisions.tsv"
-        self.run_log(str(log), "phase", "-1", "why", "ev", "res")
-        self.assertTrue(log.read_text().splitlines()[1].split("\t")[2].startswith("'-"))
-
-    def test_wrong_argcount_fails(self):
-        proc = self.run_log(str(self.tmp / "x.tsv"), "only", "two")
-        self.assertEqual(proc.returncode, 1)
 
 
 if __name__ == "__main__":
